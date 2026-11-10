@@ -67,7 +67,10 @@ void NoiseReduction::updateGains (const SpeechFeatures& features, float blockSec
 {
     const float riseCoeff = 1.0f - std::exp (-blockSeconds / juce::jmax (0.05f, riseTau_));
     const float fallCoeff = 1.0f - std::exp (-blockSeconds / 0.15f);
-    const float protect = 1.0f - 0.5f * juce::jlimit (0.0f, 1.0f, features.speechActivity);
+    // Protect speech much more strongly than room tone: at full speech
+    // activity only ~15% of the cut remains, so steady speech is not dulled.
+    // Pauses have low activity, so the reduction there is unchanged.
+    const float protect = 1.0f - 0.85f * juce::jlimit (0.0f, 1.0f, features.speechActivity);
 
     float reductionSum = 0.0f;
 

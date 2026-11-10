@@ -3,6 +3,7 @@
 #include "dsp/Biquad.h"
 #include "dsp/DspUtils.h"
 #include "dsp/Parameters.h"
+#include "dsp/SpeechAnalyzer.h"
 #include "dsp/VoiceGuardEngine.h"
 #include "fixtures/Signals.h"
 
@@ -154,6 +155,24 @@ float regionLevelDb (const std::vector<float>& v, int start, int end)
     return gainToDb ((float) std::sqrt (sum / (end - start)));
 }
 
+/** Tonality (1 - spectral flatness) of a whole signal. Musical noise from
+    spectral processing raises this on noise-only input. */
+float tonalityOf (const std::vector<float>& v)
+{
+    SpeechAnalyzer analyzer;
+    analyzer.prepare (kSr, 256, 1);
+    const float* ptrs[1] = { nullptr };
+
+    for (int i = 0; i < (int) v.size(); i += 256)
+    {
+        const int n = juce::jmin (256, (int) v.size() - i);
+        ptrs[0] = v.data() + i;
+        analyzer.process (ptrs, 1, n);
+    }
+
+    return analyzer.features().tonality;
+}
+
 } // namespace
 
 VG_TEST (engineReducesSteadyNoise)
@@ -255,6 +274,45 @@ VG_TEST (engineReducesSibilance)
     std::cout << "[score] sibilanceReductionDb = " << reduction << "\n";
     VG_CHECK (reduction > 1.0f);
     VG_CHECK (reduction < 8.5f);
+}
+
+VG_TEST (engineNoiseReductionDoesNotAddTonality)
+{
+    auto noiseSig = noise (240000, 0.05f, 5);
+    auto out = runEngine (noiseSig, params::Parameters {});
+
+    const float tin = tonalityOf (noiseSig);
+    const float tout = tonalityOf (out);
+    std::cout << "[score] tonalityIn = " << tin << "  tonalityOut = " << tout << "\n";
+    VG_CHECK (tout < tin + 0.25f);
+}
+
+VG_TEST (engineDynamicsIsTransparent)
+{
+    auto speech = speechLike (kSr, 240000, 0.3f);
+    auto p = params::Parameters {};
+    p.levelRangeDb = 0.0f;
+    auto out = runEngine (speech, p);
+
+    const float base = tailLevelDb (speech, 48000);
+    const float change = tailLevelDb (out, 48000) - base;
+    std::cout << "[score] dynamicsLevelChangeDb = " << change << "\n";
+
+    const auto isolate = [&] (params::Parameters q)
+    {
+        return tailLevelDb (runEngine (speech, q), 48000) - base;
+    };
+
+    auto pNoNr = p; pNoNr.cleanAmount = 0.0f;
+    auto pNoEq = p; pNoEq.eqStrength = 0.0f;
+    auto pNoDyn = p; pNoDyn.dynRatio = 1.0f;
+    auto pNoDeEss = p; pNoDeEss.deEsserAmount = 0.0f;
+    auto pNoHarsh = p; pNoHarsh.harshnessAmount = 0.0f;
+    std::cout << "[score] isolate noNr=" << isolate (pNoNr) << " noEq=" << isolate (pNoEq)
+              << " noDyn=" << isolate (pNoDyn) << " noDeEss=" << isolate (pNoDeEss)
+              << " noHarsh=" << isolate (pNoHarsh) << "\n";
+
+    VG_CHECK (std::abs (change) < 1.5f);
 }
 
 VG_TEST (engineSilenceStaysSilent)

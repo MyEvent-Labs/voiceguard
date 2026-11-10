@@ -36,7 +36,9 @@ void HarshnessControl::process (juce::AudioBuffer<float>& buffer, const SpeechFe
     bank_.detect (buffer);
 
     const float gate = juce::jlimit (0.0f, 1.0f, features.speechActivity * 1.5f);
-    const float confidence = juce::jlimit (0.0f, 1.0f, features.harshnessConfidence);
+
+    // Dead band: only act on real harshness, so neutral speech is left alone.
+    const float confidence = juce::jlimit (0.0f, 1.0f, (features.harshnessConfidence - 0.35f) / 0.5f);
     const float base = amount_ * kMaxCutDb * confidence * gate;
 
     for (int band = 0; band < kNumBands; ++band)
