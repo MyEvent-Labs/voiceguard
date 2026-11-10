@@ -29,7 +29,11 @@ include(cmake/VoiceGuardJuce.cmake)
 # ---------------------------------------------------------------------------
 add_library(voiceguard_core STATIC
     src/dsp/Biquad.cpp
+    src/dsp/DeEsser.cpp
     src/dsp/DspUtils.cpp
+    src/dsp/DynamicCutBank.cpp
+    src/dsp/DynamicEq.cpp
+    src/dsp/HarshnessControl.cpp
     src/dsp/InputConditioning.cpp
     src/dsp/NoiseReduction.cpp
     src/dsp/Parameters.cpp

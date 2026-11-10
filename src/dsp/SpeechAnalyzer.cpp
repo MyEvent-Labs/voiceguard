@@ -289,7 +289,7 @@ void SpeechAnalyzer::processFrame() noexcept
     const float sibEnergy = std::pow (10.0f, bandDb_[(size_t) 7] / 10.0f)
                             + std::pow (10.0f, bandDb_[(size_t) 8] / 10.0f);
     const float sibRatio = sibEnergy / (totalEnergy + kEpsilon);
-    const float sibRaw = juce::jlimit (0.0f, 1.0f, (sibRatio - 0.12f) / 0.30f);
+    const float sibRaw = juce::jlimit (0.0f, 1.0f, (sibRatio - 0.08f) / 0.22f);
     features_.sibilanceConfidence = sibRaw * juce::jlimit (0.0f, 1.0f, features_.speechActivity * 1.5f);
 
     // Harshness: 2.5-6 kHz emphasis relative to the 1.5-2.5 kHz region.
