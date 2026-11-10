@@ -25,6 +25,10 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    /** Pull the latest engine readouts into the meters and labels. Called by
+        the timer, and directly by the offline snapshot tool. */
+    void refreshReadouts();
+
 private:
     void timerCallback() override;
     void configureKnob (juce::Slider&, juce::Label&, const juce::String& name);

@@ -136,8 +136,8 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     setAdvancedVisible (false);
 
     setResizable (true, true);
-    setResizeLimits (900, 480, 1400, 960);
-    setSize (980, 540);
+    setResizeLimits (900, 470, 1400, 960);
+    setSize (980, 500);
 
     startTimerHz (30);
 }
@@ -187,10 +187,15 @@ void VoiceGuardEditor::setAdvancedVisible (bool shouldBeVisible)
     for (auto* control : advancedControls)
         control->setVisible (shouldBeVisible);
 
-    setSize (getWidth(), shouldBeVisible ? 760 : 540);
+    setSize (getWidth(), shouldBeVisible ? 690 : 500);
 }
 
 void VoiceGuardEditor::timerCallback()
+{
+    refreshReadouts();
+}
+
+void VoiceGuardEditor::refreshReadouts()
 {
     auto& snap = processor_.snapshot();
 
@@ -198,6 +203,11 @@ void VoiceGuardEditor::timerCallback()
     inR_.setLevelDb (snap.inputLevelDb[1].load());
     outL_.setLevelDb (snap.outputLevelDb[0].load());
     outR_.setLevelDb (snap.outputLevelDb[1].load());
+
+    const float inPeak = juce::jmax (snap.inputLevelDb[0].load(), snap.inputLevelDb[1].load());
+    const float outPeak = juce::jmax (snap.outputLevelDb[0].load(), snap.outputLevelDb[1].load());
+    inCaption_.setText (juce::String::formatted ("IN  L/R   %.1f dB", inPeak), juce::dontSendNotification);
+    outCaption_.setText (juce::String::formatted ("OUT  L/R  %.1f dB", outPeak), juce::dontSendNotification);
 
     nrMeter_.setDb (snap.noiseReductionDb.load());
     eqMeter_.setDb (snap.dynamicEqDb.load());
@@ -240,14 +250,17 @@ void VoiceGuardEditor::paint (juce::Graphics& g)
         g.drawRoundedRectangle (r.toFloat(), 6.0f, 1.0f);
     };
 
-    auto bounds = getLocalBounds().reduced (14).withTrimmedTop (56);
-    panel (bounds.removeFromLeft (150));   // meters
-    bounds.removeFromLeft (12);
-    panel (bounds.removeFromTop (140));    // macros
-    bounds.removeFromTop (10);
-    panel (bounds.removeFromTop (34));     // buttons
-    bounds.removeFromTop (10);
-    panel (bounds.removeFromTop (176));    // gain reduction
+    auto area = getLocalBounds().reduced (14);
+    area.removeFromTop (42);   // header row
+    area.removeFromTop (14);
+
+    panel (area.removeFromLeft (150).withHeight (402));  // meters
+    area.removeFromLeft (12);
+    panel (area.removeFromTop (140));                    // macros
+    area.removeFromTop (10);
+    panel (area.removeFromTop (34));                     // buttons
+    area.removeFromTop (10);
+    panel (area.removeFromTop (176));                    // gain reduction
 }
 
 void VoiceGuardEditor::resized()

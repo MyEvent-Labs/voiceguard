@@ -65,8 +65,16 @@ void ReductionMeter::paint (juce::Graphics& g)
     }
 
     g.setColour (Palette::text);
-    const auto text = bipolar_ ? juce::String::formatted ("%+.1f dB", db_)
-                               : juce::String::formatted ("-%.1f dB", db_);
+
+    juce::String text;
+
+    if (bipolar_)
+        text = juce::String::formatted ("%+.1f dB", db_);
+    else if (std::abs (db_) < 0.05f)
+        text = "0.0 dB";
+    else
+        text = juce::String::formatted ("-%.1f dB", db_);
+
     g.drawText (text, valueArea, juce::Justification::centredRight);
 }
 

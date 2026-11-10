@@ -34,6 +34,16 @@ void LevelMeter::paint (juce::Graphics& g)
     g.setColour (levelDb_ > -1.0f ? Palette::warning : Palette::safe);
     g.fillRoundedRectangle (fill, 3.0f);
 
+    // Scale ticks at -12 / -24 / -36 / -48 dB for readability.
+    g.setColour (juce::Colours::black.withAlpha (0.28f));
+
+    for (float db : { -12.0f, -24.0f, -36.0f, -48.0f })
+    {
+        const auto n = juce::jlimit (0.0f, 1.0f, (db + 60.0f) / 66.0f);
+        const auto y = full.getBottom() - full.getHeight() * n;
+        g.fillRect (full.getX(), y, full.getWidth(), 1.0f);
+    }
+
     if (peakDb_ > -99.0f)
     {
         const auto pnorm = juce::jlimit (0.0f, 1.0f, (peakDb_ + 60.0f) / 66.0f);

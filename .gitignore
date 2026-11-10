@@ -49,3 +49,6 @@ desktop.ini
 # Local overrides
 .env
 .env.local
+
+# UI snapshot output
+/ui-snapshot*.png
