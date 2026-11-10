@@ -4,7 +4,9 @@ juce_add_console_app(voiceguard_tests
 
 target_sources(voiceguard_tests PRIVATE
     TestMain.cpp
-    unit/DspUtilsTests.cpp)
+    unit/DspUtilsTests.cpp
+    unit/StateTests.cpp
+    unit/ParametersTests.cpp)
 
 target_include_directories(voiceguard_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
