@@ -18,6 +18,16 @@ void styleCaption (juce::Label& label, const juce::String& text)
     label.setText (text, juce::dontSendNotification);
     label.setColour (juce::Label::textColourId, ui::Palette::textDim);
 }
+
+/** Give a control a screen-reader name, a description and a matching tooltip. */
+void nameControl (juce::Component& component, const juce::String& title, const juce::String& description)
+{
+    component.setTitle (title);
+    component.setDescription (description);
+
+    if (auto* tooltip = dynamic_cast<juce::SettableTooltipClient*> (&component))
+        tooltip->setTooltip (title + ": " + description);
+}
 } // namespace
 
 VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
@@ -95,6 +105,33 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     deEsserAdvAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (processor_.apvts, params::deEsserAmount, deEsserAdv_);
     levelTargetAdvAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (processor_.apvts, params::levelTargetDb, levelTargetAdv_);
     outputTrimAdvAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (processor_.apvts, params::outputTrimDb, outputTrimAdv_);
+
+    nameControl (clean_, "CLEAN macro", "noise reduction and low-mid cleanup");
+    nameControl (clarity_, "CLARITY macro", "intelligibility, de-essing and harshness");
+    nameControl (level_, "LEVEL macro", "level rider and gentle dynamics");
+    nameControl (protect_, "PROTECT macro", "feedback and output safety");
+    nameControl (autoButton_, "AUTO", "listen to speech and set conservative starting values");
+    nameControl (bypassButton_, "Bypass", "pass audio through unchanged");
+    nameControl (advancedButton_, "Advanced panel", "show or hide the detailed controls");
+    nameControl (hpfLabel_, "High-pass", "low-frequency filter");
+    nameControl (hpfBox_, "High-pass frequency", "rumble filter corner frequency");
+    nameControl (cleanAdv_, "Clean amount", "noise reduction depth");
+    nameControl (eqAdv_, "EQ strength", "dynamic EQ depth");
+    nameControl (deEsserAdv_, "De-esser amount", "sibilance control depth");
+    nameControl (levelTargetAdv_, "Level target", "target speech level in dB");
+    nameControl (outputTrimAdv_, "Output trim", "output gain in dB");
+
+    nameControl (inL_, "Input level left", "input meter, -60 to +6 dB");
+    nameControl (inR_, "Input level right", "input meter, -60 to +6 dB");
+    nameControl (outL_, "Output level left", "output meter, -60 to +6 dB");
+    nameControl (outR_, "Output level right", "output meter, -60 to +6 dB");
+    nameControl (nrMeter_, "Noise reduction", "current noise reduction in dB");
+    nameControl (eqMeter_, "Dynamic EQ", "current EQ reduction in dB");
+    nameControl (deEsserMeter_, "De-esser", "current sibilance reduction in dB");
+    nameControl (harshMeter_, "Harshness", "current harshness reduction in dB");
+    nameControl (levelMeter_, "Level ride", "current level ride in dB");
+    nameControl (dynMeter_, "Dynamics", "current compression gain reduction in dB");
+    nameControl (safetyMeter_, "Safety", "current peak-safety gain reduction in dB");
 
     setAdvancedVisible (false);
 

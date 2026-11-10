@@ -33,6 +33,7 @@ private:
 
     VoiceGuardProcessor& processor_;
     ui::VoiceGuardLookAndFeel lookAndFeel_;
+    juce::TooltipWindow tooltipWindow_ { this, 600 };
 
     // Gain-reduction row.
     ui::ReductionMeter nrMeter_ { "NOISE", false, 12.0f };
