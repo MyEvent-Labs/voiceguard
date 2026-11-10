@@ -44,6 +44,16 @@ void LevelRider::process (juce::AudioBuffer<float>& buffer, const SpeechFeatures
     if (features.speechActivity > 0.25f && features.rmsLongDb > -60.0f)
         desiredDb = targetDb_ - features.rmsLongDb;
 
+    // Soft dead band: leave speech alone when it is already close to target, so
+    // only genuine presenter-distance changes move the gain. This keeps steady
+    // speech transparent instead of riding it for no reason.
+    constexpr float deadbandDb = 1.5f;
+
+    if (std::abs (desiredDb) > deadbandDb)
+        desiredDb -= std::copysign (deadbandDb, desiredDb);
+    else
+        desiredDb = 0.0f;
+
     // Fast peak path, separate from the slow ride.
     if (features.peakDb > -3.0f)
         desiredDb = juce::jmin (desiredDb, -3.0f - features.peakDb);

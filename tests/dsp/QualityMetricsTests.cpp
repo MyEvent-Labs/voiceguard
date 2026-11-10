@@ -51,6 +51,21 @@ float peakOf (const std::vector<float>& v)
     return peak;
 }
 
+/** RMS in dB of the last n samples (the settled part). */
+float tailLevelDb (const std::vector<float>& v, int n)
+{
+    n = juce::jmin (n, (int) v.size());
+
+    if (n <= 0)
+        return -100.0f;
+
+    double sum = 0.0;
+    for (int i = (int) v.size() - n; i < (int) v.size(); ++i)
+        sum += (double) v[(size_t) i] * (double) v[(size_t) i];
+
+    return gainToDb ((float) std::sqrt (sum / n));
+}
+
 /** Std-dev in dB of the settling part (last second) of each step. This
     measures presenter-distance stability, not syllable variation. */
 float segmentSpreadDb (const std::vector<float>& v, int segmentSamples)
@@ -141,6 +156,23 @@ VG_TEST (engineStabilisesLevelSpread)
     std::cout << "[score] levelSpreadInDb = " << spreadIn
               << "  levelSpreadOutDb = " << spreadOut << "\n";
     VG_CHECK (spreadOut <= spreadIn);
+}
+
+VG_TEST (engineRidesQuietSpeechUp)
+{
+    auto quiet = speechLike (kSr, 240000, 0.1f);
+    auto p = params::Parameters {};
+    p.levelTargetDb = -18.0f;
+    p.levelRangeDb = 6.0f;
+    p.macroLevel = 1.0f;
+    auto out = runEngine (quiet, p);
+
+    const float inLevel = tailLevelDb (quiet, 48000);
+    const float outLevel = tailLevelDb (out, 48000);
+    std::cout << "[score] quietSpeechInDb = " << inLevel << "  outDb = " << outLevel << "\n";
+
+    VG_CHECK (outLevel > inLevel + 2.0f);      // rode the quiet presenter up
+    VG_CHECK (outLevel <= -17.0f);             // but never past the target
 }
 
 VG_TEST (engineSilenceStaysSilent)
