@@ -54,3 +54,9 @@ void VoiceGuardProcessor::setStateInformation (const void*, int)
 }
 
 } // namespace voiceguard
+
+// Plugin entry point used by the JUCE wrapper for every format.
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new voiceguard::VoiceGuardProcessor();
+}

@@ -45,7 +45,6 @@ target_compile_definitions(voiceguard_core
         JUCE_USE_CURL=0
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_MODAL_LOOPS_PERMITTED=0
-        JUCE_DISPLAY_SPLASH_SCREEN=0
         JUCE_REPORT_APP_USAGE=0)
 
 # ---------------------------------------------------------------------------
