@@ -79,7 +79,7 @@ void NoiseReduction::updateGains (const SpeechFeatures& features, float blockSec
             floorDb_[band] = envDb;
         else if (envDb < floorDb_[band])
             floorDb_[band] += (envDb - floorDb_[band]) * fallCoeff;
-        else if (features.speechActivity < 0.3f)
+        else if (features.speechActivity < 0.5f)
             floorDb_[band] += (envDb - floorDb_[band]) * riseCoeff;
 
         floorDb_[band] = juce::jlimit (-100.0f, -10.0f, floorDb_[band]);

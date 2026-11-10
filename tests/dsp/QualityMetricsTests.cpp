@@ -121,6 +121,38 @@ std::vector<float> steppedSpeech()
 
     return out;
 }
+/** Speech then room tone, twice: does the noise drop in the pauses without
+    the speech being damaged? */
+std::vector<float> speechThenNoise()
+{
+    auto speech = speechLike (kSr, 96000, 0.3f);
+    auto room = noise (192000, 0.04f, 9);
+    std::vector<float> out;
+
+    for (int rep = 0; rep < 2; ++rep)
+    {
+        out.insert (out.end(), speech.begin(), speech.end());
+        out.insert (out.end(), room.begin(), room.end());
+    }
+
+    return out;
+}
+
+float regionLevelDb (const std::vector<float>& v, int start, int end)
+{
+    end = juce::jmin (end, (int) v.size());
+    start = juce::jlimit (0, (int) v.size(), start);
+
+    if (end <= start)
+        return -100.0f;
+
+    double sum = 0.0;
+    for (int i = start; i < end; ++i)
+        sum += (double) v[(size_t) i] * (double) v[(size_t) i];
+
+    return gainToDb ((float) std::sqrt (sum / (end - start)));
+}
+
 } // namespace
 
 VG_TEST (engineReducesSteadyNoise)
@@ -173,6 +205,34 @@ VG_TEST (engineRidesQuietSpeechUp)
 
     VG_CHECK (outLevel > inLevel + 2.0f);      // rode the quiet presenter up
     VG_CHECK (outLevel <= -17.0f);             // but never past the target
+}
+
+VG_TEST (engineReducesNoiseDuringPauses)
+{
+    auto signal = speechThenNoise();
+    auto out = runEngine (signal, params::Parameters {});
+
+    const int s = 96000;
+    const int n = 192000;
+    const auto measure = [&] (const std::vector<float>& v)
+    {
+        return 0.5f * (regionLevelDb (v, s + n - 48000, s + n)
+                       + regionLevelDb (v, 2 * s + 2 * n - 48000, 2 * s + 2 * n));
+    };
+
+    const float inNoise = measure (signal);
+    const float outNoise = measure (out);
+    const float reduction = inNoise - outNoise;
+    std::cout << "[score] noiseInPausesReductionDb = " << reduction << "\n";
+
+    // Isolation: run the same signal with the rider range at zero to see what
+    // the noise reduction alone achieves in the pauses.
+    auto pNoRider = params::Parameters {};
+    pNoRider.levelRangeDb = 0.0f;
+    auto outNoRider = runEngine (signal, pNoRider);
+    std::cout << "[score] noiseInPausesReductionNoRiderDb = " << (inNoise - measure (outNoRider)) << "\n";
+
+    VG_CHECK (reduction > 3.0f);
 }
 
 VG_TEST (engineSilenceStaysSilent)
