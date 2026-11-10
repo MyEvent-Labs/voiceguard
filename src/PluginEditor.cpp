@@ -12,6 +12,12 @@ juce::Font boldFont (float size)
 {
     return juce::Font (juce::FontOptions (size, juce::Font::bold));
 }
+
+void styleCaption (juce::Label& label, const juce::String& text)
+{
+    label.setText (text, juce::dontSendNotification);
+    label.setColour (juce::Label::textColourId, ui::Palette::textDim);
+}
 } // namespace
 
 VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
@@ -29,6 +35,14 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     subtitle_.setText (juce::String (product::versionTag) + " ALPHA  -  insert, AUTO, mix",
                        juce::dontSendNotification);
     subtitle_.setColour (juce::Label::textColourId, ui::Palette::textDim);
+
+    styleCaption (inCaption_, "IN  L / R");
+    styleCaption (outCaption_, "OUT  L / R");
+    addAndMakeVisible (inCaption_);
+    addAndMakeVisible (outCaption_);
+
+    for (auto* m : { &inL_, &inR_, &outL_, &outR_ })
+        addAndMakeVisible (*m);
 
     configureKnob (clean_, cleanLabel_, "CLEAN");
     configureKnob (clarity_, clarityLabel_, "CLARITY");
@@ -50,29 +64,21 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     bypassButton_.setClickingTogglesState (true);
     bypassAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (processor_.apvts, params::bypass, bypassButton_);
 
-    addAndMakeVisible (meterIn_);
-    addAndMakeVisible (meterOut_);
-    inCaption_.setText ("IN", juce::dontSendNotification);
-    outCaption_.setText ("OUT", juce::dontSendNotification);
-    inCaption_.setColour (juce::Label::textColourId, ui::Palette::textDim);
-    outCaption_.setColour (juce::Label::textColourId, ui::Palette::textDim);
-    addAndMakeVisible (inCaption_);
-    addAndMakeVisible (outCaption_);
-
-    for (auto* readout : { &noiseReadout_, &levelReadout_, &harshReadout_, &protectReadout_, &autoStatus_ })
-    {
-        readout->setColour (juce::Label::textColourId, ui::Palette::text);
-        addAndMakeVisible (*readout);
-    }
-
-    autoStatus_.setColour (juce::Label::textColourId, ui::Palette::accent);
-
     addAndMakeVisible (advancedButton_);
     advancedButton_.setButtonText ("ADVANCED");
     advancedButton_.setClickingTogglesState (true);
     advancedButton_.onClick = [this] { setAdvancedVisible (advancedButton_.getToggleState()); };
 
+    for (auto* m : { &nrMeter_, &eqMeter_, &deEsserMeter_, &harshMeter_, &levelMeter_, &dynMeter_, &safetyMeter_ })
+        addAndMakeVisible (*m);
+
+    autoStatus_.setColour (juce::Label::textColourId, ui::Palette::accent);
+    protectStatus_.setColour (juce::Label::textColourId, ui::Palette::safe);
+    addAndMakeVisible (autoStatus_);
+    addAndMakeVisible (protectStatus_);
+
     hpfLabel_.setText ("HPF", juce::dontSendNotification);
+    hpfLabel_.setColour (juce::Label::textColourId, ui::Palette::textDim);
     hpfBox_.addItemList ({ "Off", "60 Hz", "80 Hz", "100 Hz", "120 Hz", "160 Hz" }, 1);
     addAndMakeVisible (hpfBox_);
     addAndMakeVisible (hpfLabel_);
@@ -93,8 +99,8 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     setAdvancedVisible (false);
 
     setResizable (true, true);
-    setResizeLimits (760, 400, 1280, 760);
-    setSize (860, 440);
+    setResizeLimits (900, 480, 1400, 960);
+    setSize (980, 540);
 
     startTimerHz (30);
 }
@@ -144,26 +150,30 @@ void VoiceGuardEditor::setAdvancedVisible (bool shouldBeVisible)
     for (auto* control : advancedControls)
         control->setVisible (shouldBeVisible);
 
-    setSize (getWidth(), shouldBeVisible ? 640 : 440);
+    setSize (getWidth(), shouldBeVisible ? 760 : 540);
 }
 
 void VoiceGuardEditor::timerCallback()
 {
     auto& snap = processor_.snapshot();
 
-    meterIn_.setLevelDb (snap.inputLevelDb.load());
-    meterOut_.setLevelDb (snap.outputLevelDb.load());
+    inL_.setLevelDb (snap.inputLevelDb[0].load());
+    inR_.setLevelDb (snap.inputLevelDb[1].load());
+    outL_.setLevelDb (snap.outputLevelDb[0].load());
+    outR_.setLevelDb (snap.outputLevelDb[1].load());
 
-    noiseReadout_.setText (juce::String::formatted ("NOISE  -%.1f dB", snap.noiseReductionDb.load()),
-                           juce::dontSendNotification);
-    levelReadout_.setText (juce::String::formatted ("LEVEL  %+.1f dB", snap.levelRideDb.load()),
-                           juce::dontSendNotification);
-    harshReadout_.setText (juce::String::formatted ("HARSH  -%.1f dB", snap.harshnessDb.load()),
-                           juce::dontSendNotification);
-    protectReadout_.setText (snap.protectionActive.load() ? "PROTECTION  ACTIVE" : "PROTECTION  SAFE",
-                             juce::dontSendNotification);
-    protectReadout_.setColour (juce::Label::textColourId,
-                               snap.protectionActive.load() ? ui::Palette::warning : ui::Palette::safe);
+    nrMeter_.setDb (snap.noiseReductionDb.load());
+    eqMeter_.setDb (snap.dynamicEqDb.load());
+    deEsserMeter_.setDb (snap.deEsserDb.load());
+    harshMeter_.setDb (snap.harshnessDb.load());
+    levelMeter_.setDb (snap.levelRideDb.load());
+    dynMeter_.setDb (snap.dynamicsGainReductionDb.load());
+    safetyMeter_.setDb (snap.outputGainReductionDb.load());
+
+    protectStatus_.setText (snap.protectionActive.load() ? "PROTECTION  ACTIVE" : "PROTECTION  SAFE",
+                            juce::dontSendNotification);
+    protectStatus_.setColour (juce::Label::textColourId,
+                              snap.protectionActive.load() ? ui::Palette::warning : ui::Palette::safe);
 
     const int state = snap.autoState.load();
 
@@ -194,21 +204,45 @@ void VoiceGuardEditor::paint (juce::Graphics& g)
     };
 
     auto bounds = getLocalBounds().reduced (14).withTrimmedTop (56);
-    panel (bounds.removeFromTop (150));           // macros row
-    panel (bounds.removeFromTop (92).reduced (0, 6)); // meters + readouts
+    panel (bounds.removeFromLeft (150));   // meters
+    bounds.removeFromLeft (12);
+    panel (bounds.removeFromTop (140));    // macros
+    bounds.removeFromTop (10);
+    panel (bounds.removeFromTop (34));     // buttons
+    bounds.removeFromTop (10);
+    panel (bounds.removeFromTop (176));    // gain reduction
 }
 
 void VoiceGuardEditor::resized()
 {
     auto area = getLocalBounds().reduced (14);
     auto header = area.removeFromTop (42);
-    title_.setBounds (header.removeFromLeft (juce::jmin (360, header.getWidth() / 2)));
+    title_.setBounds (header.removeFromLeft (juce::jmin (380, header.getWidth() / 2)));
     subtitle_.setBounds (header.withTrimmedTop (4));
 
     area.removeFromTop (14);
 
-    // Macros row.
-    auto macros = area.removeFromTop (136);
+    // Input/output meters, per channel.
+    auto metersArea = area.removeFromLeft (150).reduced (10, 12);
+    auto inGroup = metersArea.removeFromTop (150);
+    inCaption_.setBounds (inGroup.removeFromTop (18));
+    auto inRow = inGroup;
+    inL_.setBounds (inRow.removeFromLeft (inRow.getWidth() / 2).reduced (3, 0));
+    inR_.setBounds (inRow.reduced (3, 0));
+
+    metersArea.removeFromTop (10);
+
+    auto outGroup = metersArea.removeFromTop (150);
+    outCaption_.setBounds (outGroup.removeFromTop (18));
+    auto outRow = outGroup;
+    outL_.setBounds (outRow.removeFromLeft (outRow.getWidth() / 2).reduced (3, 0));
+    outR_.setBounds (outRow.reduced (3, 0));
+
+    area.removeFromLeft (12);
+    auto right = area;
+
+    // Macros.
+    auto macros = right.removeFromTop (140).reduced (10, 12);
     const int knobWidth = macros.getWidth() / 4;
 
     auto placeMacro = [&] (juce::Slider& slider, juce::Label& label, juce::Rectangle<int> cell)
@@ -222,42 +256,39 @@ void VoiceGuardEditor::resized()
     placeMacro (level_, levelLabel_, macros.removeFromLeft (knobWidth));
     placeMacro (protect_, protectLabel_, macros);
 
-    area.removeFromTop (10);
+    right.removeFromTop (10);
 
-    // Buttons + meters + readouts.
-    auto controls = area.removeFromTop (86);
-    auto buttons = controls.removeFromLeft (150);
-    autoButton_.setBounds (buttons.removeFromTop (34).reduced (0, 2));
-    bypassButton_.setBounds (buttons.removeFromTop (34).reduced (0, 2));
+    // Buttons + AUTO/PROTECTION status.
+    auto buttons = right.removeFromTop (34);
+    autoButton_.setBounds (buttons.removeFromLeft (120).reduced (0, 2));
+    bypassButton_.setBounds (buttons.removeFromLeft (120).reduced (6, 2));
+    advancedButton_.setBounds (buttons.removeFromRight (150).reduced (0, 2));
 
-    controls.removeFromLeft (12);
-    auto meters = controls.removeFromLeft (260);
-    auto inRow = meters.removeFromTop (22);
-    inCaption_.setBounds (inRow.removeFromLeft (40));
-    meterIn_.setBounds (inRow);
-    auto outRow = meters.removeFromTop (22).withTrimmedTop (6);
-    outCaption_.setBounds (outRow.removeFromLeft (40));
-    meterOut_.setBounds (outRow);
+    right.removeFromTop (10);
 
-    controls.removeFromLeft (16);
-    auto readouts = controls;
-    noiseReadout_.setBounds (readouts.removeFromTop (20));
-    levelReadout_.setBounds (readouts.removeFromTop (20));
-    harshReadout_.setBounds (readouts.removeFromTop (20));
-    protectReadout_.setBounds (readouts.removeFromTop (20));
+    auto status = right.removeFromTop (22);
+    autoStatus_.setBounds (status.removeFromLeft (status.getWidth() / 2));
+    protectStatus_.setBounds (status);
 
-    area.removeFromTop (10);
-    advancedButton_.setBounds (area.removeFromTop (28).removeFromRight (140));
+    right.removeFromTop (10);
+
+    // Gain-reduction row.
+    auto grArea = right.removeFromTop (176);
+    for (auto* meter : { &nrMeter_, &eqMeter_, &deEsserMeter_, &harshMeter_, &levelMeter_, &dynMeter_, &safetyMeter_ })
+    {
+        auto row = grArea.removeFromTop (25).reduced (0, 1);
+        meter->setBounds (row);
+    }
 
     if (! advancedVisible_)
         return;
 
-    area.removeFromTop (8);
-    auto adv = area;
+    right.removeFromTop (10);
+    auto adv = right;
 
     auto hpfRow = adv.removeFromTop (28);
     hpfLabel_.setBounds (hpfRow.removeFromLeft (110));
-    hpfBox_.setBounds (hpfRow.removeFromLeft (160));
+    hpfBox_.setBounds (hpfRow.removeFromLeft (170));
 
     auto placeAdv = [&] (juce::Slider& slider, juce::Label& label)
     {

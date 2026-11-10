@@ -95,7 +95,8 @@ target_sources(VoiceGuard PRIVATE
     src/PluginProcessor.cpp
     src/PluginEditor.cpp
     src/ui/VoiceGuardLookAndFeel.cpp
-    src/ui/LevelMeter.cpp)
+    src/ui/LevelMeter.cpp
+    src/ui/ReductionMeter.cpp)
 
 target_include_directories(VoiceGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 

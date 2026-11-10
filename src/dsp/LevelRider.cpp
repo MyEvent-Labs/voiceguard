@@ -37,11 +37,12 @@ void LevelRider::process (juce::AudioBuffer<float>& buffer, const SpeechFeatures
 
     const float blockSeconds = (float) ((double) numSamples / sampleRate_);
 
-    // Speech gate: never boost silence or room tone.
+    // Ride on the long-term level, not the short-term one: the short-term RMS
+    // follows syllables and makes the rider chase speech rather than distance.
     float desiredDb = 0.0f;
 
-    if (features.speechActivity > 0.25f && features.rmsShortDb > -60.0f)
-        desiredDb = juce::jlimit (-rangeDb_, rangeDb_, targetDb_ - features.rmsShortDb);
+    if (features.speechActivity > 0.25f && features.rmsLongDb > -60.0f)
+        desiredDb = targetDb_ - features.rmsLongDb;
 
     // Fast peak path, separate from the slow ride.
     if (features.peakDb > -3.0f)
@@ -49,8 +50,12 @@ void LevelRider::process (juce::AudioBuffer<float>& buffer, const SpeechFeatures
 
     desiredDb = juce::jlimit (-rangeDb_, rangeDb_, desiredDb);
 
-    // Slow ride: speed 0 -> ~4 s, speed 1 -> ~0.5 s.
-    const float tau = juce::jmap (speed_, 4.0f, 0.5f);
+    // Asymmetric: pull the gain down quickly when the source is too loud
+    // (attack), raise it slowly when the presenter moves away (release). This
+    // reduces the level spread without pumping.
+    const float tau = desiredDb < rideGainDb_
+                          ? juce::jmap (speed_, 0.8f, 0.25f)
+                          : juce::jmap (speed_, 2.5f, 0.8f);
     const float coeff = 1.0f - std::exp (-blockSeconds / tau);
     rideGainDb_ += (desiredDb - rideGainDb_) * coeff;
     rideGainDb_ = juce::jlimit (-rangeDb_, rangeDb_, rideGainDb_);

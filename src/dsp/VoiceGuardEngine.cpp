@@ -173,10 +173,12 @@ void VoiceGuardEngine::process (juce::AudioBuffer<float>& buffer) noexcept
     if (eff_.deFeedback)
         feedback_->process (buffer);
 
-    outputSafety_.process (buffer);
-
+    // Output trim is part of the output stage, so the safety ceiling always
+    // has the final word: the output is bounded regardless of trim.
     if (std::abs (eff_.outputTrimDb) > 0.01f)
         buffer.applyGain (dbToGain (eff_.outputTrimDb));
+
+    outputSafety_.process (buffer);
 
     // Click-free bypass crossfade against the dry copy.
     bypassMix_.setTargetValue (eff_.bypass ? 1.0f : 0.0f);
@@ -196,29 +198,32 @@ void VoiceGuardEngine::process (juce::AudioBuffer<float>& buffer) noexcept
         }
     }
 
-    // Readouts.
-    float dryPeak = 0.0f;
-    float wetPeak = 0.0f;
-
-    for (int ch = 0; ch < numChannels; ++ch)
+    // Readouts: per-channel levels and per-stage gain reduction.
+    for (int ch = 0; ch < UiSnapshot::kMaxChannels; ++ch)
     {
-        const auto* dry = dryBuffer_.getReadPointer (ch);
-        const auto* wet = buffer.getReadPointer (ch);
+        const int source = juce::jmin (ch, numChannels - 1);
+        const auto* dry = dryBuffer_.getReadPointer (source);
+        const auto* wet = buffer.getReadPointer (source);
+
+        float dryPeak = 0.0f;
+        float wetPeak = 0.0f;
 
         for (int i = 0; i < numSamples; ++i)
         {
             dryPeak = juce::jmax (dryPeak, std::abs (dry[i]));
             wetPeak = juce::jmax (wetPeak, std::abs (wet[i]));
         }
+
+        snapshot_.inputLevelDb[ch].store (gainToDb (dryPeak));
+        snapshot_.outputLevelDb[ch].store (gainToDb (wetPeak));
     }
 
-    snapshot_.inputLevelDb.store (gainToDb (dryPeak));
-    snapshot_.outputLevelDb.store (gainToDb (wetPeak));
     snapshot_.noiseReductionDb.store (noiseReduction_.currentReductionDb());
     snapshot_.levelRideDb.store (levelRider_.rideGainDb());
     snapshot_.harshnessDb.store (harshness_.currentCutDb());
     snapshot_.deEsserDb.store (deEsser_.currentCutDb());
     snapshot_.dynamicEqDb.store (dynamicEq_.currentCutDb());
+    snapshot_.dynamicsGainReductionDb.store (dynamics_.gainReductionDb());
     snapshot_.outputGainReductionDb.store (outputSafety_.gainReductionDb());
     snapshot_.protectionActive.store (outputSafety_.isActive());
     snapshot_.speechActivity.store (features.speechActivity);

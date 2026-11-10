@@ -23,14 +23,20 @@ namespace voiceguard
 /** Message-thread-safe readouts for the editor. Plain atomics only. */
 struct UiSnapshot
 {
-    std::atomic<float> inputLevelDb { -100.0f };
-    std::atomic<float> outputLevelDb { -100.0f };
+    static constexpr int kMaxChannels = 2;
+
+    std::atomic<float> inputLevelDb[kMaxChannels] {};
+    std::atomic<float> outputLevelDb[kMaxChannels] {};
+
+    // Per-stage gain reduction (positive dB), plus the signed level ride.
     std::atomic<float> noiseReductionDb { 0.0f };
-    std::atomic<float> levelRideDb { 0.0f };
+    std::atomic<float> dynamicEqDb { 0.0f };
     std::atomic<float> harshnessDb { 0.0f };
     std::atomic<float> deEsserDb { 0.0f };
-    std::atomic<float> dynamicEqDb { 0.0f };
+    std::atomic<float> levelRideDb { 0.0f };
+    std::atomic<float> dynamicsGainReductionDb { 0.0f };
     std::atomic<float> outputGainReductionDb { 0.0f };
+
     std::atomic<float> speechActivity { 0.0f };
     std::atomic<float> autoProgress { 0.0f };
     std::atomic<int> autoState { 0 };

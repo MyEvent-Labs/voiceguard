@@ -4,13 +4,17 @@
 
 #include "PluginProcessor.h"
 #include "ui/LevelMeter.h"
+#include "ui/ReductionMeter.h"
 #include "ui/VoiceGuardLookAndFeel.h"
 
 namespace voiceguard
 {
 
-/** MyEvent Labs VoiceGuard editor: four macros, AUTO, meters, readouts and an
-    advanced panel. Reads only atomics from the processor. */
+/** MyEvent Labs VoiceGuard editor.
+
+    Four macros, AUTO, bypass, per-channel input/output meters, a gain-reduction
+    row for every processing stage, and an advanced panel. Reads only atomics
+    from the processor. */
 class VoiceGuardEditor : public juce::AudioProcessorEditor,
                          private juce::Timer
 {
@@ -30,19 +34,27 @@ private:
     VoiceGuardProcessor& processor_;
     ui::VoiceGuardLookAndFeel lookAndFeel_;
 
+    // Gain-reduction row.
+    ui::ReductionMeter nrMeter_ { "NOISE", false, 12.0f };
+    ui::ReductionMeter eqMeter_ { "EQ", false, 6.0f };
+    ui::ReductionMeter deEsserMeter_ { "DE-ESS", false, 8.0f };
+    ui::ReductionMeter harshMeter_ { "HARSH", false, 5.0f };
+    ui::ReductionMeter levelMeter_ { "LEVEL", true, 6.0f };
+    ui::ReductionMeter dynMeter_ { "DYN", false, 12.0f };
+    ui::ReductionMeter safetyMeter_ { "SAFETY", false, 6.0f };
+
     juce::Label title_;
     juce::Label subtitle_;
 
+    juce::Label inCaption_, outCaption_;
+    ui::LevelMeter inL_, inR_, outL_, outR_;
+
     juce::Slider clean_, clarity_, level_, protect_;
     juce::Label cleanLabel_, clarityLabel_, levelLabel_, protectLabel_;
-    juce::TextButton autoButton_, bypassButton_;
+    juce::TextButton autoButton_, bypassButton_, advancedButton_;
 
-    ui::LevelMeter meterIn_, meterOut_;
-    juce::Label inCaption_, outCaption_;
+    juce::Label autoStatus_, protectStatus_;
 
-    juce::Label noiseReadout_, levelReadout_, harshReadout_, protectReadout_, autoStatus_;
-
-    juce::TextButton advancedButton_;
     juce::ComboBox hpfBox_;
     juce::Label hpfLabel_;
     juce::Slider cleanAdv_, eqAdv_, deEsserAdv_, levelTargetAdv_, outputTrimAdv_;

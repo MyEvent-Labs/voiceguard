@@ -5,27 +5,19 @@
 namespace voiceguard::ui
 {
 
-/** Simple horizontal level meter, -60..+6 dB. */
+/** Vertical level meter, -60..+6 dB, with a peak-hold line. */
 class LevelMeter : public juce::Component
 {
 public:
     LevelMeter() = default;
 
-    void setLevelDb (float db)
-    {
-        const float clamped = juce::jlimit (-100.0f, 6.0f, db);
+    void setLevelDb (float db);
 
-        if (std::abs (clamped - levelDb_) > 0.05f)
-        {
-            levelDb_ = clamped;
-            repaint();
-        }
-    }
-
-    void paint (juce::Graphics& g) override;
+    void paint (juce::Graphics&) override;
 
 private:
     float levelDb_ = -100.0f;
+    float peakDb_ = -100.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LevelMeter)
 };
