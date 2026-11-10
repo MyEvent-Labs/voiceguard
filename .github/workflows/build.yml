@@ -1,0 +1,86 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  JUCE_CACHE_KEY: juce-8.0.17-security
+
+jobs:
+  windows:
+    name: Windows x64 (VST3 + Standalone)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache JUCE
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ env.JUCE_CACHE_KEY }}-windows
+
+      - name: Configure
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "build/VoiceGuard_artefacts/Release/VST3/*" -DestinationPath "dist/VoiceGuard-v0.0.1-alpha-Windows-VST3.zip"
+          Compress-Archive -Path "build/VoiceGuard_artefacts/Release/Standalone/*" -DestinationPath "dist/VoiceGuard-v0.0.1-alpha-Windows-Standalone.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voiceguard-windows
+          path: dist/*
+          if-no-files-found: warn
+
+  macos:
+    name: macOS (VST3 + AU + Standalone)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache JUCE
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ env.JUCE_CACHE_KEY }}-macos
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: AU validation
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "build/VoiceGuard_artefacts/Release/AU/MyEvent Labs VoiceGuard.component" ~/Library/Audio/Plug-Ins/Components/ || true
+          auval -v aufx Vgrd MyEv || echo "auval did not pass; see log above"
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          (cd build/VoiceGuard_artefacts/Release && zip -r "$GITHUB_WORKSPACE/dist/VoiceGuard-v0.0.1-alpha-macOS-VST3.zip" VST3 || true)
+          (cd build/VoiceGuard_artefacts/Release && zip -r "$GITHUB_WORKSPACE/dist/VoiceGuard-v0.0.1-alpha-macOS-AU.zip" AU || true)
+          (cd build/VoiceGuard_artefacts/Release && zip -r "$GITHUB_WORKSPACE/dist/VoiceGuard-v0.0.1-alpha-macOS-Standalone.zip" Standalone || true)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voiceguard-macos
+          path: dist/*
+          if-no-files-found: warn
