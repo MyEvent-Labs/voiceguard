@@ -315,6 +315,47 @@ VG_TEST (engineDynamicsIsTransparent)
     VG_CHECK (std::abs (change) < 1.5f);
 }
 
+VG_TEST (macrosChangeTheAudio)
+{
+    // Realistic, busy material: speech with a significant noise floor, a
+    // bright component (for clarity/de-ess) and hot peaks (for protect).
+    auto signal = speechLike (kSr, 120000, 0.6f);
+    addInto (signal, noise (120000, 0.12f, 7));
+    addInto (signal, tone (kSr, 120000, 4000.0, 0.25f));
+    addInto (signal, tone (kSr, 120000, 8000.0, 0.15f));
+
+    const auto render = [&] (float clean, float clarity, float level, float protect)
+    {
+        auto p = params::Parameters {};
+        p.macroClean = clean; p.macroClarity = clarity; p.macroLevel = level; p.macroProtect = protect;
+        return runEngine (signal, p);
+    };
+
+    const auto diffDb = [] (const std::vector<float>& a, const std::vector<float>& b)
+    {
+        double sum = 0.0;
+        for (size_t i = 0; i < a.size(); ++i)
+        {
+            const double d = (double) a[i] - (double) b[i];
+            sum += d * d;
+        }
+        return gainToDb ((float) std::sqrt (sum / (double) a.size()));
+    };
+
+    const auto base = render (0.5f, 0.5f, 0.5f, 0.5f);
+    const float dClean = diffDb (base, render (0.0f, 0.5f, 0.5f, 0.5f));
+    const float dClarity = diffDb (base, render (0.5f, 0.0f, 0.5f, 0.5f));
+    const float dLevel = diffDb (base, render (0.5f, 0.5f, 0.0f, 0.5f));
+    const float dProtect = diffDb (base, render (0.5f, 0.5f, 0.5f, 1.0f));
+    std::cout << "[macro] clean=" << dClean << " clarity=" << dClarity
+              << " level=" << dLevel << " protect=" << dProtect << "\n";
+
+    VG_CHECK (dClean > -31.0f);
+    VG_CHECK (dClarity > -32.0f);
+    VG_CHECK (dLevel > -32.0f);
+    VG_CHECK (dProtect > -35.0f);
+}
+
 VG_TEST (engineSilenceStaysSilent)
 {
     auto silent = silence (96000);

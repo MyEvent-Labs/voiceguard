@@ -13,7 +13,7 @@ constexpr float kQs[DynamicEq::kNumBands] = { 1.0f, 1.2f, 1.4f, 1.2f, 1.2f, 1.0f
 // for neutral speech. Excess above this is treated as program-dependent
 // coloration and becomes a candidate for a dynamic cut.
 constexpr float kTiltDb[DynamicEq::kNumBands] = { 2.0f, 1.0f, 0.0f, 0.0f, -1.0f, -2.0f };
-constexpr float kMaxCutDb[DynamicEq::kNumBands] = { 4.0f, 3.0f, 3.0f, 2.0f, 4.0f, 3.0f };
+constexpr float kMaxCutDb[DynamicEq::kNumBands] = { 6.0f, 5.0f, 5.0f, 3.0f, 6.0f, 5.0f };
 } // namespace
 void DynamicEq::prepare (double sampleRate, int /*maxBlockSize*/, int numChannels)
 {

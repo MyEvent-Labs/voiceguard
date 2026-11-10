@@ -22,7 +22,7 @@ class NoiseReduction
 {
 public:
     static constexpr int kNumBands = 10;
-    static constexpr float kMaxReductionDb = 12.0f;
+    static constexpr float kMaxReductionDb = 18.0f;
 
     NoiseReduction() = default;
 

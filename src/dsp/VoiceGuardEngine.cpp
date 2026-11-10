@@ -9,9 +9,13 @@ namespace voiceguard
 
 namespace
 {
+// Convex macro curve: the default (0.5) stays gentle and transparent, while
+// the top of the travel reaches full effect. Turning a macro is clearly
+// audible without making the default sound over-processed.
 float macroGain (float macro01) noexcept
 {
-    return juce::jlimit (0.0f, 1.0f, macro01 * 2.0f);
+    const float m = juce::jlimit (0.0f, 1.0f, macro01);
+    return juce::jlimit (0.0f, 2.0f, 2.0f * std::pow (m, 1.585f));
 }
 } // namespace
 
@@ -91,8 +95,13 @@ void VoiceGuardEngine::resolve() noexcept
     eff_.harshnessAmount = juce::jlimit (0.0f, 1.0f, p.harshnessAmount * clarity);
 
     const float level = macroGain (p.macroLevel);
-    eff_.levelTargetDb = p.levelTargetDb;
-    eff_.levelRangeDb = juce::jlimit (0.0f, 6.0f, p.levelRangeDb * level);
+    // LEVEL also moves the target level itself, so the macro is clearly
+    // audible as a level change and not only as ride behaviour.
+    eff_.levelTargetDb = juce::jlimit (-30.0f, -6.0f,
+                                       p.levelTargetDb + (p.macroLevel - 0.5f) * 12.0f);
+    // PROTECT also makes the ride more conservative (less gain movement).
+    eff_.levelRangeDb = juce::jlimit (0.0f, 6.0f,
+                                      p.levelRangeDb * level * (1.0f - 0.3f * p.macroProtect));
     eff_.levelSpeed = p.levelSpeed;
     eff_.dynThresholdDb = p.dynThresholdDb;
     eff_.dynRatio = juce::jlimit (1.0f, 6.0f, 1.0f + (p.dynRatio - 1.0f) * level);
@@ -101,7 +110,8 @@ void VoiceGuardEngine::resolve() noexcept
     eff_.dynKneeDb = p.dynKneeDb;
 
     // PROTECT raises safety: turning it up lowers the ceiling.
-    eff_.outputCeilingDb = juce::jlimit (-12.0f, 0.0f, p.outputCeilingDb - p.macroProtect * 3.0f);
+    eff_.outputCeilingDb = juce::jlimit (-18.0f, 0.0f,
+                                         p.outputCeilingDb - macroGain (p.macroProtect) * 6.0f);
     eff_.outputTrimDb = p.outputTrimDb;
     eff_.deFeedback = p.deFeedbackEnable;
     eff_.bypass = p.bypass;

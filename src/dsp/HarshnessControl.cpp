@@ -10,7 +10,7 @@ namespace
 constexpr float kCentres[HarshnessControl::kNumBands] = { 3200.0f, 4500.0f, 6000.0f };
 constexpr float kQs[HarshnessControl::kNumBands] = { 1.0f, 1.0f, 1.0f };
 constexpr float kWeight[HarshnessControl::kNumBands] = { 0.8f, 1.0f, 0.9f };
-constexpr float kMaxCutDb = 5.0f;
+constexpr float kMaxCutDb = 8.0f;
 } // namespace
 
 void HarshnessControl::prepare (double sampleRate, int /*maxBlockSize*/, int numChannels)
