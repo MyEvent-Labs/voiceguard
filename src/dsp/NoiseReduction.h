@@ -2,7 +2,7 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 
-#include "dsp/Biquad.h"
+#include "dsp/DynamicCutBank.h"
 #include "dsp/SpeechAnalyzer.h"
 
 namespace voiceguard
@@ -10,15 +10,14 @@ namespace voiceguard
 
 /** Conservative multiband noise reduction.
 
-    A zero-latency bank of bandpass sidechains tracks the noise floor per band
-    and drives a serial chain of dynamic peaking cuts. A 0 dB peaking filter
-    is bit-exact unity, so zero amount is transparent; cuts compound serially,
-    so the reduction is monotonic in amount. Detection uses the averaged
-    stereo envelope and the same cut is applied to both channels, preserving
-    image stability.
+    Uses the shared DynamicCutBank: bandpass sidechains track a per-band noise
+    floor and drive serial dynamic peaking cuts. A 0 dB peaking filter is
+    bit-exact unity, so zero amount is transparent; cuts compound serially, so
+    reduction is monotonic in amount. Detection uses the averaged stereo
+    envelope and applies the same cut to both channels, preserving image
+    stability.
 
-    Targets ~0-12 dB of steady-noise reduction before artefacts.
-*/
+    Threading: setters and process() are audio-thread only. */
 class NoiseReduction
 {
 public:
@@ -41,25 +40,14 @@ public:
 private:
     void updateGains (const SpeechFeatures& features, float blockSeconds) noexcept;
 
-    double sampleRate_ = 48000.0;
-    int numChannels_ = 2;
-    bool prepared_ = false;
-
-    Biquad detectors_[kNumBands];
-    Biquad eq_[kNumBands];
-    float centreHz_[kNumBands] {};
-    float env_[kNumBands] {};
+    DynamicCutBank bank_;
     float floorDb_[kNumBands] {};
     float cutDb_[kNumBands] {};
-    float cutSmoothed_[kNumBands] {};
 
     float amount_ = 0.5f;
     float adaptation_ = 0.5f;
     float currentReductionDb_ = 0.0f;
-
-    float envAttack_ = 0.0f;
-    float envRelease_ = 0.0f;
-    float cutSmoothCoeff_ = 0.0f;
+    double sampleRate_ = 48000.0;
     float riseTau_ = 0.75f;
     int blocksSeen_ = 0;
 

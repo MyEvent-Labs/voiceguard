@@ -16,7 +16,7 @@ namespace voiceguard
 class DynamicCutBank
 {
 public:
-    static constexpr int kMaxBands = 8;
+    static constexpr int kMaxBands = 12;
 
     DynamicCutBank() = default;
 
@@ -37,6 +37,15 @@ public:
 
     int numBands() const noexcept { return numBands_; }
 
+    /** Sum of the smoothed cuts currently applied (positive dB). */
+    float totalCutDb() const noexcept
+    {
+        float sum = 0.0f;
+        for (int band = 0; band < numBands_; ++band)
+            sum += cutSmoothed_[band];
+        return sum;
+    }
+
 private:
     double sampleRate_ = 48000.0;
     int numChannels_ = 2;
@@ -52,7 +61,6 @@ private:
 
     float envAttack_ = 0.0f;
     float envRelease_ = 0.0f;
-    float cutSmooth_ = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DynamicCutBank)
 };

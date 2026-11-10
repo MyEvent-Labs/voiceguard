@@ -28,16 +28,21 @@ include(cmake/VoiceGuardJuce.cmake)
 # is exercised directly by the offline test harness.
 # ---------------------------------------------------------------------------
 add_library(voiceguard_core STATIC
+    src/dsp/AutoController.cpp
     src/dsp/Biquad.cpp
     src/dsp/DeEsser.cpp
     src/dsp/DspUtils.cpp
     src/dsp/DynamicCutBank.cpp
     src/dsp/DynamicEq.cpp
+    src/dsp/Dynamics.cpp
     src/dsp/HarshnessControl.cpp
     src/dsp/InputConditioning.cpp
+    src/dsp/LevelRider.cpp
     src/dsp/NoiseReduction.cpp
+    src/dsp/OutputSafety.cpp
     src/dsp/Parameters.cpp
     src/dsp/SpeechAnalyzer.cpp
+    src/dsp/VoiceGuardEngine.cpp
     src/state/StateIO.cpp)
 
 target_include_directories(voiceguard_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -47,7 +52,10 @@ target_link_libraries(voiceguard_core
         juce::juce_audio_basics
         juce::juce_dsp
         juce::juce_audio_processors
-        juce::juce_data_structures)
+        juce::juce_data_structures
+    PRIVATE
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_warning_flags)
 
 target_compile_definitions(voiceguard_core
     PUBLIC
@@ -81,7 +89,9 @@ juce_add_plugin(VoiceGuard
 
 target_sources(VoiceGuard PRIVATE
     src/PluginProcessor.cpp
-    src/PluginEditor.cpp)
+    src/PluginEditor.cpp
+    src/ui/VoiceGuardLookAndFeel.cpp
+    src/ui/LevelMeter.cpp)
 
 target_include_directories(VoiceGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 

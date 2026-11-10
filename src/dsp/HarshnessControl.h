@@ -22,6 +22,8 @@ public:
     void setAmount (float amount01) noexcept;
     void process (juce::AudioBuffer<float>& buffer, const SpeechFeatures& features) noexcept;
 
+    float currentCutDb() const noexcept { return bank_.totalCutDb(); }
+
 private:
     DynamicCutBank bank_;
     float amount_ = 0.5f;

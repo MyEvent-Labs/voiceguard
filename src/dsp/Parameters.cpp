@@ -11,7 +11,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
 
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    const auto ranged = [] (float lo, float hi, float def, float step = 0.0f)
+    const auto ranged = [] (float lo, float hi, float /*defaultValue*/, float step = 0.0f)
     {
         return juce::NormalisableRange<float> (lo, hi, step);
     };

@@ -32,7 +32,6 @@ void DynamicCutBank::configure (double sampleRate, int numChannels,
 
     envAttack_ = sampleCoeff (sampleRate_, 0.005f);
     envRelease_ = sampleCoeff (sampleRate_, 0.060f);
-    cutSmooth_ = sampleCoeff (sampleRate_, 0.040f);
 
     reset();
 }

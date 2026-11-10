@@ -3,23 +3,23 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include "ProductInfo.h"
+#include "dsp/Parameters.h"
+#include "dsp/VoiceGuardEngine.h"
 
 namespace voiceguard
 {
 
 /** MyEvent Labs VoiceGuard - live speech enhancement.
 
-    v0.0.1 Alpha scaffold. The full DSP engine, parameter tree and AUTO
-    controller are added by their own tasks; this stage keeps a valid,
-    click-free passthrough so the plugin targets build and validate.
-*/
+    Owns the APVTS (26 stable parameters), the DSP engine and the versioned
+    state IO. The audio thread only reads raw parameter atomics and runs the
+    engine; no allocation, locks or IO. */
 class VoiceGuardProcessor : public juce::AudioProcessor
 {
 public:
     VoiceGuardProcessor();
     ~VoiceGuardProcessor() override = default;
 
-    // --- AudioProcessor -----------------------------------------------------
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
@@ -43,7 +43,13 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::AudioProcessorValueTreeState apvts;
+
+    UiSnapshot& snapshot() noexcept { return engine_.snapshot(); }
+
 private:
+    VoiceGuardEngine engine_;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoiceGuardProcessor)
 };
 
