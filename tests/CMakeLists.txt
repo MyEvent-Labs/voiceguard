@@ -9,7 +9,8 @@ target_sources(voiceguard_tests PRIVATE
     unit/ParametersTests.cpp
     unit/SpeechAnalyzerTests.cpp
     unit/BiquadTests.cpp
-    unit/InputConditioningTests.cpp)
+    unit/InputConditioningTests.cpp
+    dsp/NoiseReductionTests.cpp)
 
 target_include_directories(voiceguard_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

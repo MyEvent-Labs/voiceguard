@@ -65,6 +65,7 @@ private:
     std::vector<float> frame_;     // kFftSize
     std::vector<float> prevMag_;   // kFftSize / 2 + 1
     int fill_ = 0;
+    int framesSeen_ = 0;
 
     std::array<int, kNumBands> bandLo_ {};
     std::array<int, kNumBands> bandHi_ {};

@@ -31,6 +31,7 @@ add_library(voiceguard_core STATIC
     src/dsp/Biquad.cpp
     src/dsp/DspUtils.cpp
     src/dsp/InputConditioning.cpp
+    src/dsp/NoiseReduction.cpp
     src/dsp/Parameters.cpp
     src/dsp/SpeechAnalyzer.cpp
     src/state/StateIO.cpp)

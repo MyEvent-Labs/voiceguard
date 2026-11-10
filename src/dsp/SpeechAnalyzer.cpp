@@ -88,6 +88,7 @@ void SpeechAnalyzer::prepare (double sampleRate, int /*maxBlockSize*/, int /*num
 void SpeechAnalyzer::reset() noexcept
 {
     fill_ = 0;
+    framesSeen_ = 0;
     meanSqShort_ = 0.0f;
     meanSqLong_ = 0.0f;
     peakHoldDb_ = -100.0f;
@@ -172,10 +173,16 @@ void SpeechAnalyzer::processFrame() noexcept
 
     const float frameDb = gainToDb ((float) std::sqrt (frameSumSq / (double) kFftSize));
 
-    if (frameDb < features_.noiseFloorDb)
+    // Seed the floor from the first frames so a steady room tone is recognised
+    // within a fraction of a second rather than after several seconds.
+    if (framesSeen_ < 16)
+        features_.noiseFloorDb = frameDb;
+    else if (frameDb < features_.noiseFloorDb)
         features_.noiseFloorDb += (frameDb - features_.noiseFloorDb) * 0.35f;
     else
         features_.noiseFloorDb += (frameDb - features_.noiseFloorDb) * 0.02f;
+
+    ++framesSeen_;
 
     features_.noiseFloorDb = juce::jlimit (-100.0f, -20.0f, features_.noiseFloorDb);
 
