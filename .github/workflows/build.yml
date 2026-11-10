@@ -73,9 +73,19 @@ jobs:
 
       - name: AU validation
         run: |
+          set +e
           mkdir -p ~/Library/Audio/Plug-Ins/Components
-          cp -R "build/VoiceGuard_artefacts/Release/AU/MyEvent Labs VoiceGuard.component" ~/Library/Audio/Plug-Ins/Components/ || true
-          auval -v aufx Vgrd MyEv || echo "auval did not pass; see log above"
+          cp -R "build/VoiceGuard_artefacts/Release/AU/MyEvent Labs VoiceGuard.component" ~/Library/Audio/Plug-Ins/Components/
+          # Force the component registrar to rescan the Components folder.
+          killall -9 AudioComponentRegistrar 2>/dev/null
+          sleep 3
+          auval -v aufx Vgrd MyEv > auval.log 2>&1
+          rc=$?
+          cat auval.log
+          if [ $rc -ne 0 ]; then
+            echo "::warning title=AU validation::auval did not pass (rc=$rc). The AU is built but not yet validated; see the step log."
+          fi
+          exit 0
 
       - name: Package
         run: |
