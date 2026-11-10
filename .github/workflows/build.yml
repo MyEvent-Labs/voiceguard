@@ -15,7 +15,7 @@ jobs:
     name: Windows x64 (VST3 + Standalone)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -23,7 +23,7 @@ jobs:
           arch: x64
 
       - name: Cache JUCE
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: build/_deps
           key: ${{ env.JUCE_CACHE_KEY }}-windows
@@ -44,7 +44,7 @@ jobs:
           Compress-Archive -Path "build/VoiceGuard_artefacts/Release/VST3/*" -DestinationPath "dist/VoiceGuard-v0.0.1-alpha-Windows-VST3.zip"
           Compress-Archive -Path "build/VoiceGuard_artefacts/Release/Standalone/*" -DestinationPath "dist/VoiceGuard-v0.0.1-alpha-Windows-Standalone.zip"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: voiceguard-windows
           path: dist/*
@@ -54,10 +54,10 @@ jobs:
     name: macOS (VST3 + AU + Standalone)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       - name: Cache JUCE
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: build/_deps
           key: ${{ env.JUCE_CACHE_KEY }}-macos
@@ -94,7 +94,7 @@ jobs:
           (cd build/VoiceGuard_artefacts/Release && zip -r "$GITHUB_WORKSPACE/dist/VoiceGuard-v0.0.1-alpha-macOS-AU.zip" AU || true)
           (cd build/VoiceGuard_artefacts/Release && zip -r "$GITHUB_WORKSPACE/dist/VoiceGuard-v0.0.1-alpha-macOS-Standalone.zip" Standalone || true)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: voiceguard-macos
           path: dist/*
