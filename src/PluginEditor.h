@@ -60,6 +60,8 @@ private:
 
     juce::Label autoStatus_, protectStatus_;
 
+    juce::ComboBox presetBox_;
+
     juce::ComboBox hpfBox_;
     juce::Label hpfLabel_;
     juce::Slider cleanAdv_, eqAdv_, deEsserAdv_, levelTargetAdv_, outputTrimAdv_;

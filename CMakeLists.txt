@@ -47,6 +47,7 @@ add_library(voiceguard_core STATIC
     src/dsp/Parameters.cpp
     src/dsp/SpeechAnalyzer.cpp
     src/dsp/VoiceGuardEngine.cpp
+    src/state/Presets.cpp
     src/state/StateIO.cpp)
 
 target_include_directories(voiceguard_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

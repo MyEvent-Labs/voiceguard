@@ -7,6 +7,7 @@ target_sources(voiceguard_tests PRIVATE
     unit/DspUtilsTests.cpp
     unit/StateTests.cpp
     unit/ParametersTests.cpp
+    unit/PresetTests.cpp
     unit/SpeechAnalyzerTests.cpp
     unit/BiquadTests.cpp
     unit/InputConditioningTests.cpp
@@ -14,7 +15,8 @@ target_sources(voiceguard_tests PRIVATE
     dsp/DynamicEqTests.cpp
     dsp/DeEsserTests.cpp
     dsp/EngineTests.cpp
-    dsp/QualityMetricsTests.cpp)
+    dsp/QualityMetricsTests.cpp
+    dsp/SoakTests.cpp)
 
 target_include_directories(voiceguard_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

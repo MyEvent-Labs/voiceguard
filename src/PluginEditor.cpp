@@ -2,6 +2,7 @@
 
 #include "dsp/Parameters.h"
 #include "dsp/VoiceGuardEngine.h"
+#include "state/Presets.h"
 
 namespace voiceguard
 {
@@ -78,6 +79,18 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     advancedButton_.setButtonText ("ADVANCED");
     advancedButton_.setClickingTogglesState (true);
     advancedButton_.onClick = [this] { setAdvancedVisible (advancedButton_.getToggleState()); };
+
+    addAndMakeVisible (presetBox_);
+    presetBox_.setTextWhenNothingSelected ("Preset");
+    for (size_t i = 0; i < factoryPresets().size(); ++i)
+        presetBox_.addItem (factoryPresets()[i].name, (int) i + 1);
+    presetBox_.onChange = [this]
+    {
+        const int index = presetBox_.getSelectedItemIndex();
+        if (index >= 0)
+            applyPreset (processor_.apvts, factoryPresets()[(size_t) index]);
+    };
+    nameControl (presetBox_, "Preset", "load a factory starting point");
 
     for (auto* m : { &nrMeter_, &eqMeter_, &deEsserMeter_, &harshMeter_, &levelMeter_, &dynMeter_, &safetyMeter_ })
         addAndMakeVisible (*m);
@@ -313,6 +326,7 @@ void VoiceGuardEditor::resized()
     autoButton_.setBounds (buttons.removeFromLeft (120).reduced (0, 2));
     bypassButton_.setBounds (buttons.removeFromLeft (120).reduced (6, 2));
     advancedButton_.setBounds (buttons.removeFromRight (150).reduced (0, 2));
+    presetBox_.setBounds (buttons.reduced (12, 2));
 
     right.removeFromTop (10);
 
