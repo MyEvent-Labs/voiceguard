@@ -29,15 +29,19 @@ DefaultDirName={autopf}\MyEvent Labs\VoiceGuard
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 OutputDir=..\release
-OutputBaseFilename=VoiceGuard-0.0.1-alpha-Windows-x64-Setup
+OutputBaseFilename=VoiceGuard-Setup-0.0.1-alpha
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+DisableDirPage=yes
+DisableReadyPage=yes
+DisableWelcomePage=yes
+CloseApplications=yes
+RestartApplications=no
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
-LicenseFile=..\LICENSE
 SetupLogging=yes
 UninstallDisplayIcon={app}\{#StandaloneExe}
 UninstallDisplayName={#AppVerName}
@@ -52,24 +56,25 @@ ChangesEnvironment=no
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
-[Tasks]
-Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
-
 [Files]
 Source: "{#BuildDir}\Standalone\{#StandaloneExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BuildDir}\VST3\{#Vst3Bundle}\*"; DestDir: "{commoncf64}\VST3\{#Vst3Bundle}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "INSTALL.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#StandaloneExe}"
 Name: "{group}\Install notes"; Filename: "{app}\INSTALL.txt"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#StandaloneExe}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#StandaloneExe}"; Description: "Launch VoiceGuard"; Flags: nowait postinstall skipifsilent
+
+[Messages]
+FinishedHeadingLabel=VoiceGuard is ready
+FinishedLabel=MyEvent Labs VoiceGuard has been installed.%n%nThe VST3 plugin is in:%n  C:\Program Files\Common Files\VST3\MyEvent Labs VoiceGuard.vst3%n%nOpen your host, rescan plugins, then insert "MyEvent Labs VoiceGuard" on a speech channel.%n%nThis is an unsigned Alpha test build - verify the SHA-256 checksum before use.
 
 [UninstallDelete]
 ; Remove the VST3 bundle folder itself once its installed files are gone.
