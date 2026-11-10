@@ -4,6 +4,12 @@
 /out/
 cmake-build-*/
 
+# Local build tooling (Inno Setup etc.)
+/.tools/
+
+# Packaged release artifacts
+/release/
+
 # IDE
 .vs/
 .vscode/

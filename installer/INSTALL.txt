@@ -1,0 +1,40 @@
+MyEvent Labs VoiceGuard v0.0.1 Alpha - Windows x64
+==================================================
+
+This installer places:
+
+  Standalone  C:\Program Files\MyEvent Labs\VoiceGuard\MyEvent Labs VoiceGuard.exe
+  VST3        C:\Program Files\Common Files\VST3\MyEvent Labs VoiceGuard.vst3
+
+Both need administrator rights to install, because the VST3 format requires the
+shared Common Files\VST3 folder.
+
+Using it in a host
+------------------
+1. Install as above.
+2. Rescan plugins in your host (REAPER, Ableton Live, Studio One, etc.).
+3. Insert "MyEvent Labs VoiceGuard" on a speech channel.
+4. Default workflow: insert -> AUTO -> mix.
+
+Uninstalling
+------------
+Settings > Apps > Installed apps > MyEvent Labs VoiceGuard > Uninstall, or run
+the "Uninstall MyEvent Labs VoiceGuard" shortcut in the Start Menu group.
+
+The uninstaller removes the standalone app and the VST3 bundle. It does not
+touch your host project files.
+
+ALPHA NOTICE
+------------
+This is an unsigned Alpha test build (v0.0.1-alpha). It is NOT for
+show-critical use. Windows SmartScreen may warn because the build is not
+code-signed; verify the SHA-256 checksum published with the release instead of
+weakening OS security settings.
+
+This build is a DSP/local-processing alpha. Some processing stages may still be
+incomplete; see the project README and ALPHA limitations.
+
+Processing is 100% local. No account, no network, no telemetry. Microphone
+audio never leaves this computer.
+
+Licence: AGPL-3.0-or-later. Source: https://github.com/MyEvent-Labs/voiceguard
