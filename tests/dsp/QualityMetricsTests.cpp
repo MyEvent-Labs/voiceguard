@@ -1,5 +1,6 @@
 #include "../TestRegistry.h"
 
+#include "dsp/Biquad.h"
 #include "dsp/DspUtils.h"
 #include "dsp/Parameters.h"
 #include "dsp/VoiceGuardEngine.h"
@@ -233,6 +234,27 @@ VG_TEST (engineReducesNoiseDuringPauses)
     std::cout << "[score] noiseInPausesReductionNoRiderDb = " << (inNoise - measure (outNoRider)) << "\n";
 
     VG_CHECK (reduction > 3.0f);
+}
+
+VG_TEST (engineReducesSibilance)
+{
+    auto signal = speechLike (kSr, 96000, 0.3f);
+    addInto (signal, hfNoise (kSr, 96000, 0.2f, 41));
+    auto out = runEngine (signal, params::Parameters {});
+
+    const auto bandLevelDb = [] (const std::vector<float>& v)
+    {
+        Biquad bp;
+        bp.setBandpass (kSr, 5500.0, 1.0);
+        auto copy = v;
+        bp.processBlock (copy.data(), (int) copy.size(), 0);
+        return tailLevelDb (copy, 24000);
+    };
+
+    const float reduction = bandLevelDb (signal) - bandLevelDb (out);
+    std::cout << "[score] sibilanceReductionDb = " << reduction << "\n";
+    VG_CHECK (reduction > 1.0f);
+    VG_CHECK (reduction < 8.5f);
 }
 
 VG_TEST (engineSilenceStaysSilent)
