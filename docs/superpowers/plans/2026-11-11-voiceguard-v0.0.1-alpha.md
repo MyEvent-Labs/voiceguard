@@ -8,7 +8,7 @@
 
 **Tech Stack:** C++20, JUCE 8.0.17-security (pinned, FetchContent with local-path escape hatch), CMake 3.22+, GitHub Actions (Windows + macOS).
 
-**Spec:** `C:\Users\DuncanUnderwood\Documents\app-prompts\voiceguard-v0.0.1-build-prompt.md`
+**Spec:** VoiceGuard v0.0.1 Alpha build brief (private project brief).
 
 ## Global Constraints
 
