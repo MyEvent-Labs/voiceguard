@@ -56,6 +56,7 @@ private:
 
     juce::Slider clean_, clarity_, level_, protect_;
     juce::Label cleanLabel_, clarityLabel_, levelLabel_, protectLabel_;
+    juce::Label cleanValue_, clarityValue_, levelValue_, protectValue_;
     juce::TextButton autoButton_, bypassButton_, advancedButton_;
 
     juce::Label autoStatus_, protectStatus_;

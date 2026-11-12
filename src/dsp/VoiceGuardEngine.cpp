@@ -154,7 +154,10 @@ void VoiceGuardEngine::process (juce::AudioBuffer<float>& buffer) noexcept
     ScopedDenormalDisable noDenormals;
 
     // Never resize the host buffer on the audio thread; only process what fits.
+    // A host may hand us more samples than we prepared for, so clamp the dry
+    // copy to the preallocated buffer (otherwise it is an out-of-bounds write).
     const int numChannels = juce::jmin (buffer.getNumChannels(), maxChannels_);
+    const int drySamples = juce::jmin (numSamples, dryBuffer_.getNumSamples());
 
     sanitizeBuffer (buffer);
 
@@ -167,7 +170,7 @@ void VoiceGuardEngine::process (juce::AudioBuffer<float>& buffer) noexcept
     auto_.process (features, blockSeconds);
 
     for (int ch = 0; ch < numChannels; ++ch)
-        dryBuffer_.copyFrom (ch, 0, buffer, ch, 0, numSamples);
+        dryBuffer_.copyFrom (ch, 0, buffer, ch, 0, drySamples);
 
     input_.process (buffer);
 
@@ -203,7 +206,9 @@ void VoiceGuardEngine::process (juce::AudioBuffer<float>& buffer) noexcept
             for (int i = 0; i < numSamples; ++i)
             {
                 const float mix = bypassMix_.getNextValue();
-                wet[i] = wet[i] * (1.0f - mix) + dry[i] * mix;
+
+                if (i < drySamples)
+                    wet[i] = wet[i] * (1.0f - mix) + dry[i] * mix;
             }
         }
     }
@@ -218,11 +223,11 @@ void VoiceGuardEngine::process (juce::AudioBuffer<float>& buffer) noexcept
         float dryPeak = 0.0f;
         float wetPeak = 0.0f;
 
-        for (int i = 0; i < numSamples; ++i)
-        {
+        for (int i = 0; i < drySamples; ++i)
             dryPeak = juce::jmax (dryPeak, std::abs (dry[i]));
+
+        for (int i = 0; i < numSamples; ++i)
             wetPeak = juce::jmax (wetPeak, std::abs (wet[i]));
-        }
 
         snapshot_.inputLevelDb[ch].store (gainToDb (dryPeak));
         snapshot_.outputLevelDb[ch].store (gainToDb (wetPeak));

@@ -60,6 +60,13 @@ VoiceGuardEditor::VoiceGuardEditor (VoiceGuardProcessor& processor)
     configureKnob (level_, levelLabel_, "LEVEL");
     configureKnob (protect_, protectLabel_, "PROTECT");
 
+    for (auto* value : { &cleanValue_, &clarityValue_, &levelValue_, &protectValue_ })
+    {
+        value->setJustificationType (juce::Justification::centred);
+        value->setColour (juce::Label::textColourId, ui::Palette::textFaint);
+        addAndMakeVisible (*value);
+    }
+
     cleanAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (processor_.apvts, params::macroClean, clean_);
     clarityAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (processor_.apvts, params::macroClarity, clarity_);
     levelAtt_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (processor_.apvts, params::macroLevel, level_);
@@ -222,6 +229,19 @@ void VoiceGuardEditor::refreshReadouts()
     inCaption_.setText (juce::String::formatted ("IN  L/R   %.1f dB", inPeak), juce::dontSendNotification);
     outCaption_.setText (juce::String::formatted ("OUT  L/R  %.1f dB", outPeak), juce::dontSendNotification);
 
+    const auto percent = [this] (const char* id)
+    {
+        if (auto* parameter = processor_.apvts.getRawParameterValue (id))
+            return juce::roundToInt (parameter->load() * 100.0f);
+
+        return 0;
+    };
+
+    cleanValue_.setText (juce::String (percent (params::macroClean)) + "%", juce::dontSendNotification);
+    clarityValue_.setText (juce::String (percent (params::macroClarity)) + "%", juce::dontSendNotification);
+    levelValue_.setText (juce::String (percent (params::macroLevel)) + "%", juce::dontSendNotification);
+    protectValue_.setText (juce::String (percent (params::macroProtect)) + "%", juce::dontSendNotification);
+
     nrMeter_.setDb (snap.noiseReductionDb.load());
     eqMeter_.setDb (snap.dynamicEqDb.load());
     deEsserMeter_.setDb (snap.deEsserDb.load());
@@ -258,9 +278,9 @@ void VoiceGuardEditor::paint (juce::Graphics& g)
     auto panel = [&g] (juce::Rectangle<int> r)
     {
         g.setColour (ui::Palette::panel);
-        g.fillRoundedRectangle (r.toFloat(), 6.0f);
+        g.fillRoundedRectangle (r.toFloat(), 10.0f);
         g.setColour (ui::Palette::outline);
-        g.drawRoundedRectangle (r.toFloat(), 6.0f, 1.0f);
+        g.drawRoundedRectangle (r.toFloat(), 10.0f, 1.0f);
     };
 
     auto area = getLocalBounds().reduced (14);
@@ -308,16 +328,18 @@ void VoiceGuardEditor::resized()
     auto macros = right.removeFromTop (140).reduced (10, 12);
     const int knobWidth = macros.getWidth() / 4;
 
-    auto placeMacro = [&] (juce::Slider& slider, juce::Label& label, juce::Rectangle<int> cell)
+    auto placeMacro = [&] (juce::Slider& slider, juce::Label& label, juce::Label& value,
+                           juce::Rectangle<int> cell)
     {
-        label.setBounds (cell.removeFromBottom (20));
-        slider.setBounds (cell.reduced (8));
+        value.setBounds (cell.removeFromBottom (15));
+        label.setBounds (cell.removeFromBottom (16));
+        slider.setBounds (cell.reduced (6, 2));
     };
 
-    placeMacro (clean_, cleanLabel_, macros.removeFromLeft (knobWidth));
-    placeMacro (clarity_, clarityLabel_, macros.removeFromLeft (knobWidth));
-    placeMacro (level_, levelLabel_, macros.removeFromLeft (knobWidth));
-    placeMacro (protect_, protectLabel_, macros);
+    placeMacro (clean_, cleanLabel_, cleanValue_, macros.removeFromLeft (knobWidth));
+    placeMacro (clarity_, clarityLabel_, clarityValue_, macros.removeFromLeft (knobWidth));
+    placeMacro (level_, levelLabel_, levelValue_, macros.removeFromLeft (knobWidth));
+    placeMacro (protect_, protectLabel_, protectValue_, macros);
 
     right.removeFromTop (10);
 
