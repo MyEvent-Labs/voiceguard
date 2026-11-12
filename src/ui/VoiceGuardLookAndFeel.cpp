@@ -3,23 +3,24 @@
 namespace voiceguard::ui
 {
 
-const juce::Colour Palette::background { 0xff0b0e13 };
-const juce::Colour Palette::panel      { 0xff12171f };
-const juce::Colour Palette::panelHigh  { 0xff181f29 };
-const juce::Colour Palette::panelDark  { 0xff090b0f };
-const juce::Colour Palette::outline    { 0xff252c37 };
-const juce::Colour Palette::outlineBright { 0xff333c4a };
-const juce::Colour Palette::text       { 0xfff4f7fb };
-const juce::Colour Palette::textDim    { 0xff9ba6b4 };
-const juce::Colour Palette::textFaint  { 0xff6e7887 };
-const juce::Colour Palette::accent     { 0xff4d8dff };
-const juce::Colour Palette::safe       { 0xff38d39f };
-const juce::Colour Palette::warning    { 0xffe8b04a };
-const juce::Colour Palette::danger     { 0xffef5a52 };
+const juce::Colour Palette::background { 0xff05070c };
+const juce::Colour Palette::panel      { 0xff0b111e };
+const juce::Colour Palette::panelHigh  { 0xff131c30 };
+const juce::Colour Palette::panelDark  { 0xff04060a };
+const juce::Colour Palette::outline    { 0xff1d2839 };
+const juce::Colour Palette::outlineBright { 0xff2e3f5c };
+const juce::Colour Palette::text       { 0xffeaf2ff };
+const juce::Colour Palette::textDim    { 0xff93a6c4 };
+const juce::Colour Palette::textFaint  { 0xff5f7392 };
+const juce::Colour Palette::accent     { 0xff41e0e6 };
+const juce::Colour Palette::accent2    { 0xff8b7cff };
+const juce::Colour Palette::safe       { 0xff3ee6a0 };
+const juce::Colour Palette::warning    { 0xffffc24b };
+const juce::Colour Palette::danger     { 0xffff5c7a };
 
 namespace
 {
-constexpr float kRadius = 7.0f;
+constexpr float kRadius = 8.0f;
 
 juce::Font uiFont (float size, int style = juce::Font::plain)
 {
@@ -27,26 +28,54 @@ juce::Font uiFont (float size, int style = juce::Font::plain)
 }
 } // namespace
 
+juce::ColourGradient Palette::spectral (juce::Rectangle<float> bounds, bool horizontal)
+{
+    if (horizontal)
+        return juce::ColourGradient (accent, bounds.getX(), bounds.getCentreY(),
+                                     accent2, bounds.getRight(), bounds.getCentreY(), false);
+
+    return juce::ColourGradient (accent, bounds.getCentreX(), bounds.getY(),
+                                 accent2, bounds.getCentreX(), bounds.getBottom(), false);
+}
+
+void Palette::drawGlow (juce::Graphics& g, juce::Rectangle<float> bounds, float radius,
+                        juce::Colour colour, float strength)
+{
+    for (int i = 6; i >= 1; --i)
+    {
+        g.setColour (colour.withAlpha (strength * (float) i / 42.0f));
+        g.drawRoundedRectangle (bounds.expanded ((float) i * 1.6f), radius + (float) i, (float) i * 1.5f);
+    }
+}
+
 void Palette::drawCard (juce::Graphics& g, juce::Rectangle<float> bounds, float radius)
 {
+    drawGlow (g, bounds, radius, accent, 0.35f);
+
     juce::ColourGradient grad (panelHigh, bounds.getX(), bounds.getY(),
                                panel, bounds.getX(), bounds.getBottom(), false);
     g.setGradientFill (grad);
     g.fillRoundedRectangle (bounds, radius);
-    g.setColour (outline);
+
+    g.setColour (outlineBright.withAlpha (0.55f));
     g.drawRoundedRectangle (bounds.reduced (0.5f), radius, 1.0f);
-    g.setColour (juce::Colours::white.withAlpha (0.045f));
-    g.drawHorizontalLine ((int) bounds.getY() + 1, bounds.getX() + radius * 0.6f, bounds.getRight() - radius * 0.6f);
+
+    g.setColour (juce::Colours::white.withAlpha (0.07f));
+    g.drawHorizontalLine ((int) bounds.getY() + 1, bounds.getX() + radius * 0.7f, bounds.getRight() - radius * 0.7f);
+
+    // A faint spectral seam along the top edge.
+    g.setColour (accent.withAlpha (0.10f));
+    g.drawHorizontalLine ((int) bounds.getY() + 2, bounds.getX() + radius, bounds.getX() + bounds.getWidth() * 0.35f);
 }
 
 void Palette::drawWell (juce::Graphics& g, juce::Rectangle<float> bounds, float radius)
 {
     g.setColour (panelDark);
     g.fillRoundedRectangle (bounds, radius);
-    g.setColour (juce::Colours::black.withAlpha (0.35f));
+    g.setColour (juce::Colours::black.withAlpha (0.45f));
     g.drawRoundedRectangle (bounds.reduced (0.5f), radius, 1.0f);
-    g.setColour (juce::Colours::black.withAlpha (0.22f));
-    g.drawHorizontalLine ((int) bounds.getY() + 1, bounds.getX() + 2.0f, bounds.getRight() - 2.0f);
+    g.setColour (accent.withAlpha (0.05f));
+    g.drawHorizontalLine ((int) bounds.getBottom() - 1, bounds.getX() + radius, bounds.getRight() - radius);
 }
 
 VoiceGuardLookAndFeel::VoiceGuardLookAndFeel()
@@ -67,7 +96,7 @@ VoiceGuardLookAndFeel::VoiceGuardLookAndFeel()
     setColour (juce::ComboBox::arrowColourId, Palette::textDim);
     setColour (juce::PopupMenu::backgroundColourId, Palette::panelHigh);
     setColour (juce::PopupMenu::textColourId, Palette::text);
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, Palette::accent.withAlpha (0.22f));
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, Palette::accent.withAlpha (0.20f));
 }
 
 void VoiceGuardLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
@@ -78,11 +107,11 @@ void VoiceGuardLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, i
     const auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) * 0.5f;
     const auto centre = bounds.getCentre();
     const auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    const auto enabled = slider.isEnabled();
 
-    const auto trackThickness = juce::jmax (3.0f, radius * 0.13f);
+    const auto trackThickness = juce::jmax (3.0f, radius * 0.12f);
     const auto arcRadius = juce::jmax (2.0f, radius - trackThickness * 0.5f - 1.0f);
 
-    // Track.
     juce::Path track;
     track.addCentredArc (centre.x, centre.y, arcRadius, arcRadius, 0.0f,
                          rotaryStartAngle, rotaryEndAngle, true);
@@ -90,43 +119,54 @@ void VoiceGuardLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, i
     g.strokePath (track, juce::PathStrokeType (trackThickness, juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
 
-    // Value arc: soft under-glow then the crisp gradient arc.
     juce::Path value;
     value.addCentredArc (centre.x, centre.y, arcRadius, arcRadius, 0.0f, rotaryStartAngle, angle, true);
 
-    const auto enabled = slider.isEnabled();
-
     if (enabled && sliderPos > 0.001f)
     {
-        g.setColour (Palette::accent.withAlpha (0.22f));
-        g.strokePath (value, juce::PathStrokeType (trackThickness * 2.4f, juce::PathStrokeType::curved,
+        // Emissive halo, then the spectral arc.
+        g.setColour (Palette::accent.withAlpha (0.20f));
+        g.strokePath (value, juce::PathStrokeType (trackThickness * 3.0f, juce::PathStrokeType::curved,
+                                                  juce::PathStrokeType::rounded));
+        g.setColour (Palette::accent.withAlpha (0.30f));
+        g.strokePath (value, juce::PathStrokeType (trackThickness * 1.9f, juce::PathStrokeType::curved,
+                                                  juce::PathStrokeType::rounded));
+
+        juce::ColourGradient grad (Palette::accent, centre.x - arcRadius, centre.y,
+                                   Palette::accent2, centre.x + arcRadius, centre.y, false);
+        g.setGradientFill (grad);
+        g.strokePath (value, juce::PathStrokeType (trackThickness, juce::PathStrokeType::curved,
+                                                  juce::PathStrokeType::rounded));
+    }
+    else if (! enabled)
+    {
+        g.setColour (Palette::outline);
+        g.strokePath (value, juce::PathStrokeType (trackThickness, juce::PathStrokeType::curved,
                                                   juce::PathStrokeType::rounded));
     }
 
-    g.setColour (enabled ? Palette::accent : Palette::outline);
-    g.strokePath (value, juce::PathStrokeType (trackThickness, juce::PathStrokeType::curved,
-                                              juce::PathStrokeType::rounded));
-
-    // Knob body: radial sheen for depth.
+    // Knob body: glass sphere.
     const auto bodyRadius = juce::jmax (1.0f, arcRadius - trackThickness - 1.5f);
     const juce::ColourGradient body (Palette::panelHigh,
-                                     centre.x - bodyRadius * 0.4f, centre.y - bodyRadius * 0.45f,
-                                     Palette::panel,
+                                     centre.x - bodyRadius * 0.4f, centre.y - bodyRadius * 0.5f,
+                                     Palette::panelDark,
                                      centre.x + bodyRadius, centre.y + bodyRadius, true);
     g.setGradientFill (body);
     g.fillEllipse (centre.x - bodyRadius, centre.y - bodyRadius, bodyRadius * 2.0f, bodyRadius * 2.0f);
-    g.setColour (Palette::outline);
+    g.setColour (Palette::outlineBright.withAlpha (0.7f));
     g.drawEllipse (centre.x - bodyRadius, centre.y - bodyRadius, bodyRadius * 2.0f, bodyRadius * 2.0f, 1.0f);
-    g.setColour (juce::Colours::white.withAlpha (0.08f));
+    g.setColour (juce::Colours::white.withAlpha (0.10f));
     g.drawEllipse (centre.x - bodyRadius + 1.5f, centre.y - bodyRadius + 1.5f,
                    bodyRadius * 2.0f - 3.0f, bodyRadius * 2.0f - 3.0f, 1.0f);
 
-    // Grip.
-    juce::Path grip;
-    const auto gripLength = bodyRadius * 0.52f;
-    grip.addRoundedRectangle (-1.25f, -gripLength, 2.5f, gripLength * 0.8f, 1.25f);
+    // Glowing grip.
+    const auto gripAngle = angle;
+    const auto tipX = centre.x + std::sin (gripAngle) * (bodyRadius * 0.68f);
+    const auto tipY = centre.y - std::cos (gripAngle) * (bodyRadius * 0.68f);
+    g.setColour (Palette::accent.withAlpha (0.35f));
+    g.fillEllipse (tipX - 3.2f, tipY - 3.2f, 6.4f, 6.4f);
     g.setColour (enabled ? Palette::text : Palette::textFaint);
-    g.fillPath (grip, juce::AffineTransform::rotation (angle).translated (centre.x, centre.y));
+    g.fillEllipse (tipX - 1.6f, tipY - 1.6f, 3.2f, 3.2f);
 }
 
 void VoiceGuardLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& button,
@@ -141,16 +181,16 @@ void VoiceGuardLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Butto
 
     if (on)
     {
-        juce::ColourGradient grad (Palette::accent.brighter (0.10f), bounds.getX(), bounds.getY(),
-                                   Palette::accent.darker (0.10f), bounds.getX(), bounds.getBottom(), false);
+        Palette::drawGlow (g, bounds, kRadius, Palette::accent, shouldDrawButtonAsHighlighted ? 0.9f : 0.6f);
+
+        juce::ColourGradient grad (Palette::accent, bounds.getX(), bounds.getY(),
+                                   Palette::accent2, bounds.getRight(), bounds.getBottom(), false);
         if (shouldDrawButtonAsDown)
             grad.multiplyOpacity (0.85f);
-        else if (shouldDrawButtonAsHighlighted)
-            grad.multiplyOpacity (1.0f);
 
         g.setGradientFill (grad);
         g.fillRoundedRectangle (bounds, kRadius);
-        g.setColour (juce::Colours::white.withAlpha (0.18f));
+        g.setColour (juce::Colours::white.withAlpha (0.25f));
         g.drawHorizontalLine ((int) bounds.getY() + 1, bounds.getX() + kRadius, bounds.getRight() - kRadius);
     }
     else
@@ -159,7 +199,7 @@ void VoiceGuardLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Butto
                                            : (shouldDrawButtonAsHighlighted ? Palette::panelHigh : Palette::panel);
         g.setColour (base);
         g.fillRoundedRectangle (bounds, kRadius);
-        g.setColour (Palette::outline);
+        g.setColour (shouldDrawButtonAsHighlighted ? Palette::outlineBright : Palette::outline);
         g.drawRoundedRectangle (bounds, kRadius, 1.0f);
     }
 

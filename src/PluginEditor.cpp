@@ -271,6 +271,28 @@ void VoiceGuardEditor::paint (juce::Graphics& g)
 {
     g.fillAll (ui::Palette::background);
 
+    // Ambient aurora field behind everything.
+    {
+        const auto b = getLocalBounds().toFloat();
+        const auto w = b.getWidth();
+        const auto h = b.getHeight();
+
+        juce::ColourGradient cyan (ui::Palette::accent.withAlpha (0.09f), w * 0.26f, -40.0f,
+                                   juce::Colours::transparentBlack, w * 0.26f, h * 0.62f, true);
+        g.setGradientFill (cyan);
+        g.fillRect (b);
+
+        juce::ColourGradient violet (ui::Palette::accent2.withAlpha (0.10f), w * 0.82f, -60.0f,
+                                     juce::Colours::transparentBlack, w * 0.82f, h * 0.7f, true);
+        g.setGradientFill (violet);
+        g.fillRect (b);
+
+        juce::ColourGradient floorGlow (ui::Palette::accent2.withAlpha (0.06f), w * 0.5f, h + 30.0f,
+                                        juce::Colours::transparentBlack, w * 0.5f, h * 0.55f, true);
+        g.setGradientFill (floorGlow);
+        g.fillRect (b);
+    }
+
     // Header band.
     {
         juce::ColourGradient grad (ui::Palette::panelHigh, 0.0f, 0.0f,
@@ -279,13 +301,20 @@ void VoiceGuardEditor::paint (juce::Graphics& g)
         g.fillRect (headerRect_);
         g.setColour (ui::Palette::outline);
         g.drawHorizontalLine (headerRect_.getBottom() - 1, 0.0f, (float) getWidth());
+
+        // Spectral seam under the header.
+        juce::ColourGradient seam (ui::Palette::accent.withAlpha (0.55f), 0.0f, 0.0f,
+                                   ui::Palette::accent2.withAlpha (0.55f), (float) getWidth(), 0.0f, false);
+        g.setGradientFill (seam);
+        g.fillRect (juce::Rectangle<int> (0, headerRect_.getBottom() - 1, getWidth(), 1));
     }
 
     // Brand mark: a badge with a small waveform.
     {
         auto badge = juce::Rectangle<int> (16, headerRect_.getY() + (headerRect_.getHeight() - 34) / 2, 34, 34).toFloat();
-        juce::ColourGradient bgrad (ui::Palette::accent.brighter (0.1f), badge.getX(), badge.getY(),
-                                    ui::Palette::accent.darker (0.25f), badge.getX(), badge.getBottom(), false);
+        juce::ColourGradient bgrad (ui::Palette::accent, badge.getX(), badge.getY(),
+                                    ui::Palette::accent2, badge.getRight(), badge.getBottom(), false);
+        ui::Palette::drawGlow (g, badge, 9.0f, ui::Palette::accent, 0.6f);
         g.setGradientFill (bgrad);
         g.fillRoundedRectangle (badge, 9.0f);
 
@@ -345,7 +374,7 @@ void VoiceGuardEditor::resized()
     presetBox_.setBounds (getWidth() - 132 - 196, headerRect_.getY() + (headerRect_.getHeight() - 28) / 2, 186, 28);
 
     area.removeFromTop (12);
-    ribbonRect_ = area.removeFromTop (78);
+    ribbonRect_ = area.removeFromTop (96);
     ribbon_.setBounds (ribbonRect_);
     area.removeFromTop (14);
 

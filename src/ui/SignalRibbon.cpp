@@ -17,15 +17,15 @@ void SignalRibbon::push (float levelDb, float activity01)
 void SignalRibbon::paint (juce::Graphics& g)
 {
     const auto bounds = getLocalBounds().toFloat();
-    Palette::drawWell (g, bounds, 7.0f);
+    Palette::drawWell (g, bounds, 9.0f);
 
-    auto inner = bounds.reduced (6.0f, 5.0f);
+    auto inner = bounds.reduced (8.0f, 7.0f);
 
-    // Grid thirds.
-    g.setColour (Palette::outline.withAlpha (0.5f));
-    for (int i = 1; i < 3; ++i)
+    // Horizon grid.
+    g.setColour (Palette::outline.withAlpha (0.45f));
+    for (int i = 1; i < 4; ++i)
     {
-        const auto y = inner.getY() + inner.getHeight() * (float) i / 3.0f;
+        const auto y = inner.getY() + inner.getHeight() * (float) i / 4.0f;
         g.drawHorizontalLine ((int) y, inner.getX(), inner.getRight());
     }
 
@@ -41,7 +41,7 @@ void SignalRibbon::paint (juce::Graphics& g)
         const int index = (write_ + i) % kPoints;
         const auto value = history_[(size_t) index];
         const auto x = inner.getX() + dx * (float) i;
-        const auto y = inner.getBottom() - inner.getHeight() * value;
+        const auto y = inner.getBottom() - inner.getHeight() * juce::jmax (0.02f, value);
 
         if (i == 0)
         {
@@ -56,16 +56,29 @@ void SignalRibbon::paint (juce::Graphics& g)
     area.lineTo (inner.getRight(), inner.getBottom());
     area.closeSubPath();
 
-    const auto accent = Palette::accent.interpolatedWith (Palette::safe, juce::jlimit (0.0f, 1.0f, activity_));
+    const auto warm = Palette::accent.interpolatedWith (Palette::safe, juce::jlimit (0.0f, 1.0f, activity_));
 
-    juce::ColourGradient fill (accent.withAlpha (0.42f), inner.getX(), inner.getY(),
-                               accent.withAlpha (0.02f), inner.getX(), inner.getBottom(), false);
+    // Aurora fill: cyan at the crest, violet sinking to transparent.
+    juce::ColourGradient fill (warm.withAlpha (0.50f), inner.getX(), inner.getY(),
+                               Palette::accent2.withAlpha (0.02f), inner.getX(), inner.getBottom(), false);
     g.setGradientFill (fill);
     g.fillPath (area);
 
-    g.setColour (accent.withAlpha (0.95f));
-    g.strokePath (line, juce::PathStrokeType (1.6f, juce::PathStrokeType::curved,
-                                             juce::PathStrokeType::rounded));
+    // Emissive line: three widening strokes for a bloom.
+    const auto lineWidth = [&] (float scale, float alpha)
+    {
+        g.setColour (warm.withAlpha (alpha));
+        g.strokePath (line, juce::PathStrokeType (1.8f * scale, juce::PathStrokeType::curved,
+                                                 juce::PathStrokeType::rounded));
+    };
+
+    lineWidth (4.0f, 0.05f);
+    lineWidth (2.6f, 0.10f);
+    lineWidth (1.0f, 0.95f);
+
+    // A cool accent underglow at the base of the well.
+    g.setColour (Palette::accent.withAlpha (0.06f));
+    g.drawHorizontalLine ((int) inner.getBottom(), inner.getX(), inner.getRight());
 }
 
 } // namespace voiceguard::ui

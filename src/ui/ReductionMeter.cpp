@@ -33,7 +33,7 @@ void ReductionMeter::paint (juce::Graphics& g)
     g.setFont (juce::Font (juce::FontOptions (10.5f, juce::Font::bold)));
     g.drawText (name_, nameArea, juce::Justification::centredLeft);
 
-    Palette::drawWell (g, track.toFloat(), 4.0f);
+    Palette::drawWell (g, track.toFloat(), 5.0f);
 
     auto trackF = track.toFloat().reduced (2.0f, 2.0f);
 
@@ -51,8 +51,9 @@ void ReductionMeter::paint (juce::Graphics& g)
             fill = trackF.withRight (centre).withLeft (centre - half * -t);
 
         const auto colour = t < 0.0f ? Palette::warning : Palette::safe;
-        juce::ColourGradient grad (colour.brighter (0.16f), 0.0f, fill.getY(),
-                                   colour.darker (0.10f), 0.0f, fill.getBottom(), false);
+        Palette::drawGlow (g, fill, 3.0f, colour, 0.4f);
+        juce::ColourGradient grad (colour.brighter (0.18f), 0.0f, fill.getY(),
+                                   colour.darker (0.12f), 0.0f, fill.getBottom(), false);
         g.setGradientFill (grad);
         g.fillRoundedRectangle (fill, 3.0f);
 
@@ -64,8 +65,10 @@ void ReductionMeter::paint (juce::Graphics& g)
         const float t = juce::jlimit (0.0f, 1.0f, db_ / maxDb_);
         auto fill = trackF.withWidth (trackF.getWidth() * t);
         const auto colour = t > 0.85f ? Palette::warning : Palette::accent;
-        juce::ColourGradient grad (colour.brighter (0.16f), 0.0f, fill.getY(),
-                                   colour.darker (0.10f), 0.0f, fill.getBottom(), false);
+
+        Palette::drawGlow (g, fill, 3.0f, colour, 0.4f);
+        juce::ColourGradient grad (colour.brighter (0.18f), fill.getX(), 0.0f,
+                                   Palette::accent2.darker (0.05f), fill.getRight(), 0.0f, false);
         g.setGradientFill (grad);
         g.fillRoundedRectangle (fill, 3.0f);
     }

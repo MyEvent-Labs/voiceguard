@@ -5,29 +5,36 @@
 namespace voiceguard::ui
 {
 
-/** MyEvent Labs palette — deep cool-neutral ground, layered surfaces, one
-    refined accent, semantic state colours. Depth comes from layered fills and
-    hairlines, never from heavy shadows. */
+/** MyEvent Labs "aurora" palette — a deep space ground with glass surfaces,
+    a cyan→violet spectral accent and soft emissive edges. Futuristic but
+    controlled: glow earns its place on live data, not decoration. */
 struct Palette
 {
     static const juce::Colour background;
-    static const juce::Colour panel;         // card surface (gradient bottom)
-    static const juce::Colour panelHigh;     // card surface (gradient top)
-    static const juce::Colour panelDark;     // sunken well / meter track
-    static const juce::Colour outline;       // hairline
-    static const juce::Colour outlineBright; // hairline highlight
+    static const juce::Colour panel;
+    static const juce::Colour panelHigh;
+    static const juce::Colour panelDark;
+    static const juce::Colour outline;
+    static const juce::Colour outlineBright;
     static const juce::Colour text;
     static const juce::Colour textDim;
     static const juce::Colour textFaint;
-    static const juce::Colour accent;
+    static const juce::Colour accent;   // cyan
+    static const juce::Colour accent2;  // violet
     static const juce::Colour safe;
     static const juce::Colour warning;
     static const juce::Colour danger;
 
-    /** A card: subtle vertical gradient, hairline, top inner highlight. */
+    /** Soft emissive glow behind a rounded rect (no shadow blur available). */
+    static void drawGlow (juce::Graphics&, juce::Rectangle<float> bounds, float radius,
+                          juce::Colour colour, float strength);
+    /** Glass card: emissive edge, gradient fill, hairline, top rim light. */
     static void drawCard (juce::Graphics&, juce::Rectangle<float> bounds, float radius);
-    /** A sunken well: flat dark fill with a top inner shadow. */
+    /** Sunken well with an inner shadow and a faint accent floor glow. */
     static void drawWell (juce::Graphics&, juce::Rectangle<float> bounds, float radius);
+
+    /** The signature spectral gradient (cyan -> violet). */
+    static juce::ColourGradient spectral (juce::Rectangle<float> bounds, bool horizontal);
 };
 
 class VoiceGuardLookAndFeel : public juce::LookAndFeel_V4
