@@ -52,3 +52,6 @@ desktop.ini
 
 # UI snapshot output
 /ui-snapshot*.png
+
+# Transient UI review renders
+/ui-review*.png
