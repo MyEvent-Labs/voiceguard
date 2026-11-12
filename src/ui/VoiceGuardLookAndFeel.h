@@ -5,21 +5,29 @@
 namespace voiceguard::ui
 {
 
-/** MyEvent Labs palette. Cool-tinted neutrals, one accent, semantic state
-    colours. Elevation is a border, never a shadow. */
+/** MyEvent Labs palette — deep cool-neutral ground, layered surfaces, one
+    refined accent, semantic state colours. Depth comes from layered fills and
+    hairlines, never from heavy shadows. */
 struct Palette
 {
-    static const juce::Colour background;    // window ground
-    static const juce::Colour panel;         // raised surface
+    static const juce::Colour background;
+    static const juce::Colour panel;         // card surface (gradient bottom)
+    static const juce::Colour panelHigh;     // card surface (gradient top)
     static const juce::Colour panelDark;     // sunken well / meter track
-    static const juce::Colour outline;       // borders
-    static const juce::Colour text;          // primary
-    static const juce::Colour textDim;       // secondary
-    static const juce::Colour textFaint;     // tertiary / units
-    static const juce::Colour accent;        // active, primary data
-    static const juce::Colour safe;          // nominal
-    static const juce::Colour warning;       // near ceiling
-    static const juce::Colour danger;        // clip / over
+    static const juce::Colour outline;       // hairline
+    static const juce::Colour outlineBright; // hairline highlight
+    static const juce::Colour text;
+    static const juce::Colour textDim;
+    static const juce::Colour textFaint;
+    static const juce::Colour accent;
+    static const juce::Colour safe;
+    static const juce::Colour warning;
+    static const juce::Colour danger;
+
+    /** A card: subtle vertical gradient, hairline, top inner highlight. */
+    static void drawCard (juce::Graphics&, juce::Rectangle<float> bounds, float radius);
+    /** A sunken well: flat dark fill with a top inner shadow. */
+    static void drawWell (juce::Graphics&, juce::Rectangle<float> bounds, float radius);
 };
 
 class VoiceGuardLookAndFeel : public juce::LookAndFeel_V4

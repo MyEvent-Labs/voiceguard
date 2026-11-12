@@ -38,10 +38,30 @@ int main (int argc, char** argv)
     }
 
     std::unique_ptr<juce::AudioProcessorEditor> editor (processor.createEditor());
-    editor->setSize (980, 540);
+    editor->setSize (1040, 600);
 
     if (auto* vg = dynamic_cast<voiceguard::VoiceGuardEditor*> (editor.get()))
-        vg->refreshReadouts();
+    {
+        // Seed the ribbon with a realistic speech/pause history so the static
+        // render shows the live area graph rather than a single sample.
+        for (int iter = 0; iter < 260; ++iter)
+        {
+            const bool talking = (iter % 90) < 58;
+            const float amp = talking ? 0.30f : 0.015f;
+
+            for (int ch = 0; ch < 2; ++ch)
+            {
+                for (int i = 0; i < 512; ++i)
+                {
+                    const double t = (double) (iter * 512 + i) / 48000.0;
+                    buffer.setSample (ch, i, amp * (float) std::sin (juce::MathConstants<double>::twoPi * 320.0 * t));
+                }
+            }
+
+            processor.processBlock (buffer, midi);
+            vg->refreshReadouts();
+        }
+    }
 
     const auto image = editor->createComponentSnapshot (editor->getLocalBounds(), true, 1.0f);
 

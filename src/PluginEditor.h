@@ -5,16 +5,15 @@
 #include "PluginProcessor.h"
 #include "ui/LevelMeter.h"
 #include "ui/ReductionMeter.h"
+#include "ui/SignalRibbon.h"
 #include "ui/VoiceGuardLookAndFeel.h"
 
 namespace voiceguard
 {
 
-/** MyEvent Labs VoiceGuard editor.
-
-    Four macros, AUTO, bypass, per-channel input/output meters, a gain-reduction
-    row for every processing stage, and an advanced panel. Reads only atomics
-    from the processor. */
+/** MyEvent Labs VoiceGuard editor — a dark studio-instrument surface: brand
+    header, a live signal ribbon, and three layered cards (meters, macros,
+    gain reduction). Operate mode: precision and restraint. */
 class VoiceGuardEditor : public juce::AudioProcessorEditor,
                          private juce::Timer
 {
@@ -25,8 +24,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    /** Pull the latest engine readouts into the meters and labels. Called by
-        the timer, and directly by the offline snapshot tool. */
+    /** Pull the latest engine readouts into the meters, ribbon and labels. */
     void refreshReadouts();
 
 private:
@@ -39,7 +37,8 @@ private:
     ui::VoiceGuardLookAndFeel lookAndFeel_;
     juce::TooltipWindow tooltipWindow_ { this, 600 };
 
-    // Gain-reduction row.
+    ui::SignalRibbon ribbon_;
+
     ui::ReductionMeter nrMeter_ { "NOISE", false, 12.0f };
     ui::ReductionMeter eqMeter_ { "EQ", false, 6.0f };
     ui::ReductionMeter deEsserMeter_ { "DE-ESS", false, 8.0f };
@@ -68,6 +67,9 @@ private:
     juce::Slider cleanAdv_, eqAdv_, deEsserAdv_, levelTargetAdv_, outputTrimAdv_;
     juce::Label cleanAdvLabel_, eqAdvLabel_, deEsserAdvLabel_, levelTargetAdvLabel_, outputTrimAdvLabel_;
     bool advancedVisible_ = false;
+
+    // Card rectangles, computed in resized() and drawn in paint().
+    juce::Rectangle<int> headerRect_, ribbonRect_, metersCard_, macrosCard_, grCard_, footerRect_;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> cleanAtt_, clarityAtt_,
         levelAtt_, protectAtt_, cleanAdvAtt_, eqAdvAtt_, deEsserAdvAtt_, levelTargetAdvAtt_, outputTrimAdvAtt_;

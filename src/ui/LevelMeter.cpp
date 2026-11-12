@@ -8,7 +8,7 @@ namespace voiceguard::ui
 void LevelMeter::setLevelDb (float db)
 {
     levelDb_ = juce::jlimit (-100.0f, 6.0f, db);
-    peakDb_ = juce::jmax (levelDb_, peakDb_ - 0.6f);
+    peakDb_ = juce::jmax (levelDb_, peakDb_ - 0.55f);
 
     if (peakDb_ < -99.0f)
         peakDb_ = -100.0f;
@@ -19,37 +19,39 @@ void LevelMeter::setLevelDb (float db)
 void LevelMeter::paint (juce::Graphics& g)
 {
     const auto full = getLocalBounds().toFloat();
+    Palette::drawWell (g, full, 5.0f);
 
-    g.setColour (Palette::panelDark);
-    g.fillRoundedRectangle (full, 3.0f);
-    g.setColour (Palette::outline);
-    g.drawRoundedRectangle (full, 3.0f, 1.0f);
-
-    if (levelDb_ <= -99.0f)
-        return;
-
+    const auto inner = full.reduced (2.0f, 2.0f);
     const auto norm = juce::jlimit (0.0f, 1.0f, (levelDb_ + 60.0f) / 66.0f);
-    const auto fill = full.withTop (full.getBottom() - full.getHeight() * norm);
 
-    g.setColour (levelDb_ > -1.0f ? Palette::warning : Palette::safe);
-    g.fillRoundedRectangle (fill, 3.0f);
+    if (levelDb_ > -99.0f && norm > 0.001f)
+    {
+        const auto fill = inner.withTop (inner.getBottom() - inner.getHeight() * norm);
+        const auto colour = levelDb_ > -1.0f ? Palette::warning
+                                             : (levelDb_ > -6.0f ? Palette::accent : Palette::safe);
 
-    // Scale ticks at -12 / -24 / -36 / -48 dB for readability.
-    g.setColour (juce::Colours::black.withAlpha (0.28f));
+        juce::ColourGradient grad (colour.brighter (0.18f), 0.0f, fill.getY(),
+                                   colour.darker (0.10f), 0.0f, fill.getBottom(), false);
+        g.setGradientFill (grad);
+        g.fillRoundedRectangle (fill, 3.0f);
+    }
+
+    // dB scale ticks.
+    g.setColour (juce::Colours::white.withAlpha (0.10f));
 
     for (float db : { -12.0f, -24.0f, -36.0f, -48.0f })
     {
         const auto n = juce::jlimit (0.0f, 1.0f, (db + 60.0f) / 66.0f);
-        const auto y = full.getBottom() - full.getHeight() * n;
-        g.fillRect (full.getX(), y, full.getWidth(), 1.0f);
+        const auto y = inner.getBottom() - inner.getHeight() * n;
+        g.fillRect (inner.getX(), y, inner.getWidth(), 1.0f);
     }
 
     if (peakDb_ > -99.0f)
     {
         const auto pnorm = juce::jlimit (0.0f, 1.0f, (peakDb_ + 60.0f) / 66.0f);
-        const auto y = full.getBottom() - full.getHeight() * pnorm;
-        g.setColour (juce::Colours::white.withAlpha (0.7f));
-        g.fillRect (full.getX(), y - 1.0f, full.getWidth(), 2.0f);
+        const auto y = inner.getBottom() - inner.getHeight() * pnorm;
+        g.setColour (juce::Colours::white.withAlpha (0.75f));
+        g.fillRect (inner.getX(), y - 1.0f, inner.getWidth(), 2.0f);
     }
 }
 

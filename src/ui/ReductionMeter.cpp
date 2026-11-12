@@ -25,57 +25,63 @@ void ReductionMeter::setDb (float dbDb)
 void ReductionMeter::paint (juce::Graphics& g)
 {
     auto r = getLocalBounds();
-    auto nameArea = r.removeFromLeft (64);
-    auto valueArea = r.removeFromRight (60);
-    auto track = r.reduced (2, 5);
+    auto nameArea = r.removeFromLeft (66);
+    auto valueArea = r.removeFromRight (62);
+    auto track = r.reduced (0, 6);
 
     g.setColour (Palette::textDim);
-    g.setFont (juce::Font (juce::FontOptions (11.0f)));
+    g.setFont (juce::Font (juce::FontOptions (10.5f, juce::Font::bold)));
     g.drawText (name_, nameArea, juce::Justification::centredLeft);
 
-    g.setColour (Palette::panelDark);
-    g.fillRoundedRectangle (track.toFloat(), 3.0f);
+    Palette::drawWell (g, track.toFloat(), 4.0f);
+
+    auto trackF = track.toFloat().reduced (2.0f, 2.0f);
 
     if (bipolar_)
     {
-        const int centre = track.getCentreX();
-        const float half = (float) track.getWidth() * 0.5f;
+        const float centre = trackF.getCentreX();
+        const float half = trackF.getWidth() * 0.5f;
         const float t = juce::jlimit (-1.0f, 1.0f, db_ / maxDb_);
 
-        juce::Rectangle<int> fill;
+        juce::Rectangle<float> fill;
 
         if (t >= 0.0f)
-            fill = track.withLeft (centre).withWidth ((int) (half * t));
+            fill = trackF.withLeft (centre).withWidth (half * t);
         else
-            fill = track.withRight (centre).withLeft (centre - (int) (half * -t));
+            fill = trackF.withRight (centre).withLeft (centre - half * -t);
 
-        g.setColour (t < 0.0f ? Palette::warning : Palette::safe);
-        g.fillRoundedRectangle (fill.toFloat(), 3.0f);
+        const auto colour = t < 0.0f ? Palette::warning : Palette::safe;
+        juce::ColourGradient grad (colour.brighter (0.16f), 0.0f, fill.getY(),
+                                   colour.darker (0.10f), 0.0f, fill.getBottom(), false);
+        g.setGradientFill (grad);
+        g.fillRoundedRectangle (fill, 3.0f);
 
-        g.setColour (Palette::outline);
-        g.fillRect (centre, track.getY(), 1, track.getHeight());
+        g.setColour (Palette::outlineBright);
+        g.fillRect (centre - 0.5f, trackF.getY(), 1.0f, trackF.getHeight());
     }
-    else
+    else if (db_ > 0.02f)
     {
         const float t = juce::jlimit (0.0f, 1.0f, db_ / maxDb_);
-        auto fill = track.withWidth ((int) ((float) track.getWidth() * t));
-
-        g.setColour (t > 0.85f ? Palette::warning : Palette::accent);
-        g.fillRoundedRectangle (fill.toFloat(), 3.0f);
+        auto fill = trackF.withWidth (trackF.getWidth() * t);
+        const auto colour = t > 0.85f ? Palette::warning : Palette::accent;
+        juce::ColourGradient grad (colour.brighter (0.16f), 0.0f, fill.getY(),
+                                   colour.darker (0.10f), 0.0f, fill.getBottom(), false);
+        g.setGradientFill (grad);
+        g.fillRoundedRectangle (fill, 3.0f);
     }
 
     g.setColour (Palette::text);
+    g.setFont (juce::Font (juce::FontOptions (11.5f, juce::Font::bold)));
 
     juce::String text;
-
     if (bipolar_)
-        text = juce::String::formatted ("%+.1f dB", db_);
+        text = juce::String::formatted ("%+.1f", db_);
     else if (std::abs (db_) < 0.05f)
-        text = "0.0 dB";
+        text = "0.0";
     else
-        text = juce::String::formatted ("-%.1f dB", db_);
+        text = juce::String::formatted ("-%.1f", db_);
 
-    g.drawText (text, valueArea, juce::Justification::centredRight);
+    g.drawText (text, valueArea, juce::Justification::centredRight, false);
 }
 
 } // namespace voiceguard::ui

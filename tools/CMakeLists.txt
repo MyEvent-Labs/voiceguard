@@ -8,7 +8,8 @@ target_sources(voiceguard_ui_snapshot PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/ui/VoiceGuardLookAndFeel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/ui/LevelMeter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ui/ReductionMeter.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ui/ReductionMeter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ui/SignalRibbon.cpp)
 
 target_include_directories(voiceguard_ui_snapshot PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
